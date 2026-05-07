@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoupleFinance — Import</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── Variables palette vert fusion banque privée ── */
+    :root {
+      --deep:    #0D5C4A;
+      --emerald: #3D9670;
+      --mint:    #6AB89A;
+      --sage:    #B8DDD0;
+      --light:   #D4EFE6;
+      --bg:      #F7FBF9;
+      --text:    #193828;
+      --muted:   #6B8F82;
+      --white:   #FFFFFF;
+      --unknown: #E8A838;
+      --radius:  12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    /* ── En-tête ── */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.8rem;
+      font-weight: 600;
+      color: var(--deep);
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      color: var(--muted);
+      font-weight: 300;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+
+    /* ── Carte principale ── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 4px 24px rgba(13, 92, 74, 0.08);
+      border: 1px solid var(--sage);
+    }
+
+    /* ── Sélection de la personne ── */
+    .personne-group {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .personne-btn {
+      flex: 1;
+      padding: 0.9rem;
+      border: 2px solid var(--sage);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .personne-btn:hover {
+      border-color: var(--mint);
+      color: var(--deep);
+    }
+
+    .personne-btn.active {
+      border-color: var(--deep);
+      background: var(--deep);
+      color: var(--white);
+    }
+
+    /* ── Zone de drop ── */
+    .drop-zone {
+      border: 2px dashed var(--sage);
+      border-radius: var(--radius);
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--emerald);
+      background: var(--light);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .drop-zone h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      color: var(--deep);
+      margin-bottom: 0.4rem;
+    }
+
+    .drop-zone p {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* ── Liste des fichiers sélectionnés ── */
+    #file-list {
+      margin-top: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 1rem;
+      background: var(--light);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--deep);
+    }
+
+    .file-item span.name { flex: 1; font-weight: 500; }
+    .file-item span.size { color: var(--muted); }
+
+    /* ── Bouton submit ── */
+    .btn-submit {
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: var(--deep);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+
+    .btn-submit:hover:not(:disabled) { background: var(--emerald); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Message d'erreur ── */
+    .error-msg {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: #FEE;
+      border: 1px solid #FCC;
+      border-radius: 8px;
+      color: #C00;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    /* ── Loader ── */
+    .loader {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--sage);
+      border-top-color: var(--deep);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>CoupleFinance</h1>
+    <p>Import & traitement de vos relevés bancaires</p>
+  </header>
+
+  <div class="card">
+
+    <!-- Sélection de la personne titulaire du compte -->
+    <div class="personne-group">
+      <button class="personne-btn" data-value="Cerise" onclick="selectPersonne(this)">👩 Cerise</button>
+      <button class="personne-btn" data-value="Loïc" onclick="selectPersonne(this)">👨 Loïc</button>
+    </div>
+
+    <!-- Zone de drop de PDFs -->
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="file-input" multiple accept=".pdf" onchange="handleFiles(this.files)">
+      <div class="drop-icon">📄</div>
+      <h3>Déposer les relevés PDF ici</h3>
+      <p>BoursoBank & BNP Paribas — plusieurs fichiers acceptés</p>
+    </div>
+
+    <!-- Liste des fichiers choisis -->
+    <div id="file-list"></div>
+
+    <!-- Erreur -->
+    <div class="error-msg" id="error-msg"></div>
+
+    <!-- Loader pendant le traitement -->
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <span>Extraction et catégorisation en cours…</span>
+    </div>
+
+    <!-- Bouton d'envoi -->
+    <button class="btn-submit" id="btn-submit" onclick="submitUpload()" disabled>
+      <span>→</span> Analyser les relevés
+    </button>
+
+  </div>
+
+  <script>
+    // ── État global de la page ──
+    let selectedPersonne = null;
+    let selectedFiles = [];
+
+    // ── Sélection de la personne ──
+    function selectPersonne(btn) {
+      document.querySelectorAll('.personne-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedPersonne = btn.dataset.value;
+      updateSubmitState();
+    }
+
+    // ── Gestion des fichiers déposés ou sélectionnés ──
+    function handleFiles(files) {
+      selectedFiles = Array.from(files).filter(f => f.name.endsWith('.pdf'));
+      renderFileList();
+      updateSubmitState();
+    }
+
+    function renderFileList() {
+      const list = document.getElementById('file-list');
+      list.innerHTML = selectedFiles.map(f => `
+        <div class="file-item">
+          <span>📑</span>
+          <span class="name">${f.name}</span>
+          <span class="size">${(f.size / 1024).toFixed(0)} Ko</span>
+        </div>
+      `).join('');
+    }
+
+    // ── Activation du bouton submit ──
+    function updateSubmitState() {
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = !(selectedPersonne && selectedFiles.length > 0);
+    }
+
+    // ── Drag & Drop ──
+    const dropZone = document.getElementById('drop-zone');
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    // ── Envoi du formulaire ──
+    async function submitUpload() {
+      if (!selectedPersonne || selectedFiles.length === 0) return;
+
+      // Affiche le loader, masque le bouton
+      document.getElementById('loader').style.display = 'flex';
+      document.getElementById('btn-submit').disabled = true;
+      document.getElementById('error-msg').style.display = 'none';
+
+      // Construction du FormData
+      const formData = new FormData();
+      formData.append('personne', selectedPersonne);
+      selectedFiles.forEach(f => formData.append('pdfs', f));
+
+      try {
+        const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Redirection vers la page de validation
+          window.location.href = `/validate/${data.session_id}`;
+        } else {
+          showError(data.error || 'Erreur lors du traitement.');
+        }
+
+      } catch (err) {
+        showError('Erreur réseau. Vérifiez que le serveur est bien lancé.');
+      } finally {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('btn-submit').disabled = false;
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+  </script>
+
+</body>
+</html>
