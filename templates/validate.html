@@ -5,301 +5,251 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CoupleFinance — Validation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --deep:    #0D5C4A;
-      --emerald: #3D9670;
-      --mint:    #6AB89A;
-      --sage:    #B8DDD0;
-      --light:   #D4EFE6;
-      --bg:      #F7FBF9;
-      --text:    #193828;
-      --muted:   #6B8F82;
-      --white:   #FFFFFF;
-      --unknown-bg:  #FFF8ED;
-      --unknown-border: #E8A838;
-      --unknown-text:   #A06A00;
-      --ok-bg:   #EDF7F3;
-      --radius:  10px;
+      --bg:        #0A0A0F;
+      --surface:   #12121A;
+      --surface2:  #1A1A26;
+      --border:    #2A2A3A;
+      --gold:      #C9A84C;
+      --gold-dim:  #8A6F2E;
+      --green:     #3ECF8E;
+      --red:       #F06A6A;
+      --orange:    #E8A838;
+      --text:      #E8E8F0;
+      --muted:     #6B6B8A;
+      --radius:    10px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Outfit', sans-serif;
+      font-family: 'DM Sans', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
     }
 
-    /* ── Header fixe ── */
+    /* ── Topbar ── */
     .topbar {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: var(--white);
-      border-bottom: 1px solid var(--sage);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
       padding: 1rem 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 2px 12px rgba(13, 92, 74, 0.06);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
     }
 
     .topbar h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.6rem;
-      font-weight: 600;
-      color: var(--deep);
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      color: var(--text);
     }
 
-    /* ── Statistiques dans le header ── */
+    .topbar h1 span { color: var(--gold); font-style: italic; }
+
+    /* ── Stats header ── */
     .stats {
       display: flex;
       gap: 1.5rem;
       align-items: center;
     }
 
-    .stat {
-      text-align: center;
-    }
+    .stat { text-align: center; }
+    .stat-value { font-size: 1.2rem; font-weight: 500; color: var(--text); }
+    .stat-value.warn { color: var(--orange); }
+    .stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
 
-    .stat-value {
-      font-size: 1.3rem;
-      font-weight: 500;
-      color: var(--deep);
-    }
+    /* ── Barre de progression ── */
+    .progress-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .progress-bar { width: 140px; height: 4px; background: var(--border); border-radius: 2px; }
+    .progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.4s; }
 
-    .stat-label {
-      font-size: 0.72rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .stat.unknown .stat-value { color: var(--unknown-text); }
-
-    /* ── Barre de progression Unknown ── */
-    .progress-bar {
-      width: 180px;
-      height: 6px;
-      background: var(--sage);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--emerald);
-      border-radius: 3px;
-      transition: width 0.4s ease;
-    }
-
-    /* ── Bouton export ── */
-    .btn-export {
-      padding: 0.7rem 1.4rem;
-      background: var(--deep);
-      color: var(--white);
+    /* ── Boutons ── */
+    .btn {
+      padding: 0.6rem 1.2rem;
       border: none;
-      border-radius: var(--radius);
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.9rem;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: opacity 0.2s;
     }
 
-    .btn-export:hover { background: var(--emerald); }
+    .btn:hover { opacity: 0.85; }
+    .btn-gold { background: var(--gold); color: #0A0A0F; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
 
     /* ── Filtres ── */
     .filters {
-      padding: 1rem 2rem;
+      padding: 0.8rem 2rem;
       display: flex;
-      gap: 0.6rem;
-      flex-wrap: wrap;
-      background: var(--white);
-      border-bottom: 1px solid var(--light);
+      gap: 0.5rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
     }
 
     .filter-btn {
-      padding: 0.4rem 0.9rem;
-      border: 1.5px solid var(--sage);
+      padding: 0.35rem 0.85rem;
+      border: 1px solid var(--border);
       border-radius: 99px;
       background: transparent;
       color: var(--muted);
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
       cursor: pointer;
       transition: all 0.15s;
     }
 
-    .filter-btn:hover { border-color: var(--mint); color: var(--deep); }
-    .filter-btn.active { border-color: var(--deep); background: var(--deep); color: var(--white); }
+    .filter-btn:hover { border-color: var(--gold-dim); color: var(--text); }
+    .filter-btn.active { border-color: var(--gold); background: var(--gold); color: #0A0A0F; }
 
-    /* ── Tableau des transactions ── */
-    .table-wrapper {
-      padding: 1.5rem 2rem;
-      max-width: 1300px;
-      margin: 0 auto;
-    }
+    /* ── Table ── */
+    .table-wrapper { padding: 1.5rem 2rem; }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      background: var(--white);
+      background: var(--surface);
       border-radius: var(--radius);
       overflow: hidden;
-      box-shadow: 0 2px 16px rgba(13, 92, 74, 0.06);
+      border: 1px solid var(--border);
     }
 
     thead th {
-      background: var(--deep);
-      color: var(--white);
+      background: var(--surface2);
+      color: var(--muted);
       font-weight: 400;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0.9rem 1rem;
+      letter-spacing: 0.1em;
+      padding: 0.85rem 1rem;
       text-align: left;
     }
 
     tbody tr {
-      border-bottom: 1px solid var(--light);
+      border-bottom: 1px solid var(--border);
       transition: background 0.15s;
     }
 
     tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: var(--bg); }
-
-    /* ── Ligne Unknown ── */
-    tbody tr.unknown-row {
-      background: var(--unknown-bg);
-      border-left: 3px solid var(--unknown-border);
-    }
-
-    tbody tr.unknown-row:hover { background: #FFF3E0; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody tr.unknown-row { border-left: 2px solid var(--orange); }
 
     td {
-      padding: 0.75rem 1rem;
-      font-size: 0.88rem;
+      padding: 0.7rem 1rem;
+      font-size: 0.85rem;
       vertical-align: middle;
     }
 
-    /* ── Badge catégorie ── */
+    /* ── Badges ── */
     .badge {
       display: inline-block;
-      padding: 0.25rem 0.65rem;
-      border-radius: 99px;
-      font-size: 0.78rem;
-      font-weight: 500;
-      background: var(--light);
-      color: var(--deep);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      background: var(--surface2);
+      color: var(--muted);
     }
 
-    .badge.unknown {
-      background: #FDEBC8;
-      color: var(--unknown-text);
-    }
+    .badge.unknown { background: #3A2A0A; color: var(--orange); }
 
-    .badge.corrected {
-      background: #E8F5E9;
-      color: #2E7D32;
-    }
-
-    /* ── Montant ── */
-    .montant-debit  { color: #C62828; font-weight: 500; }
-    .montant-credit { color: var(--emerald); font-weight: 500; }
+    /* ── Montants ── */
+    .neg { color: var(--red); }
+    .pos { color: var(--green); }
 
     /* ── Select catégorie ── */
     .cat-select {
-      padding: 0.35rem 0.6rem;
-      border: 1.5px solid var(--sage);
+      padding: 0.3rem 0.6rem;
+      border: 1px solid var(--border);
       border-radius: 6px;
-      background: var(--white);
+      background: var(--surface2);
       color: var(--text);
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
       cursor: pointer;
-      transition: border-color 0.2s;
-      min-width: 180px;
+      min-width: 170px;
+      outline: none;
     }
 
-    .cat-select:focus { outline: none; border-color: var(--emerald); }
+    .cat-select:focus { border-color: var(--gold-dim); }
 
-    /* ── Icône correction manuelle ── */
-    .corrected-icon { color: #2E7D32; margin-left: 4px; }
-
-    /* ── Toast notification ── */
+    /* ── Toast ── */
     #toast {
       position: fixed;
       bottom: 2rem;
       right: 2rem;
-      background: var(--deep);
-      color: var(--white);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
       padding: 0.75rem 1.25rem;
       border-radius: var(--radius);
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       opacity: 0;
       transform: translateY(10px);
-      transition: all 0.3s ease;
+      transition: all 0.3s;
       pointer-events: none;
       z-index: 999;
     }
 
-    #toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { border-color: var(--green); }
+    #toast.error { border-color: var(--red); }
   </style>
 </head>
 <body>
 
-  <!-- ── Header sticky ── -->
+  <!-- Topbar -->
   <div class="topbar">
-    <h1>CoupleFinance — Validation</h1>
-
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-value">{{ stats.total }}</div>
-        <div class="stat-label">Transactions</div>
-      </div>
-      <div class="stat unknown">
-        <div class="stat-value" id="unknown-count">{{ stats.unknown }}</div>
-        <div class="stat-label">À corriger</div>
-      </div>
-      <div class="stat">
-        <div class="progress-bar">
-          <div class="progress-fill" id="progress-fill"
-               style="width: {{ ((stats.categorized / stats.total) * 100) | int }}%">
+    <div class="topbar-left">
+      <h1>CoupleFinance — <span>Validation</span></h1>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value">{{ stats.total }}</div>
+          <div class="stat-label">Transactions</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value warn" id="unknown-count">{{ stats.unknown }}</div>
+          <div class="stat-label">Unknown</div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"
+                 style="width: {{ ((stats.categorized / stats.total) * 100) | int }}%"></div>
           </div>
+          <div class="stat-label"><span id="progress-pct">{{ ((stats.categorized / stats.total) * 100) | int }}</span>% catégorisé</div>
         </div>
-        <div class="stat-label">
-          <span id="progress-pct">{{ ((stats.categorized / stats.total) * 100) | int }}</span>% catégorisé
-        </div>
-      </div>
-      <div class="stat">
-        <div class="stat-value montant-debit">−{{ "%.0f"|format(stats.total_debit) }} €</div>
-        <div class="stat-label">Dépenses</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value montant-credit">+{{ "%.0f"|format(stats.total_credit) }} €</div>
-        <div class="stat-label">Entrées</div>
       </div>
     </div>
 
-    <button class="btn-export" onclick="exportCSV()">⬇ Exporter pour Power BI</button>
+    <div style="display:flex;gap:0.75rem;">
+      <!-- Bouton principal : sauvegarde dans le dashboard -->
+      <button class="btn btn-gold" onclick="saveToDashboard()">
+        ◈ Sauvegarder dans le dashboard
+      </button>
+    </div>
   </div>
 
-  <!-- ── Filtres rapides ── -->
+  <!-- Filtres -->
   <div class="filters">
     <button class="filter-btn active" onclick="filterBy('all', this)">Tout</button>
-    <button class="filter-btn" onclick="filterBy('unknown', this)">⚠ Unknown seulement</button>
+    <button class="filter-btn" onclick="filterBy('unknown', this)">⚠ Unknown</button>
     <button class="filter-btn" onclick="filterBy('debit', this)">Dépenses</button>
     <button class="filter-btn" onclick="filterBy('credit', this)">Entrées</button>
   </div>
 
-  <!-- ── Tableau des transactions ── -->
+  <!-- Tableau -->
   <div class="table-wrapper">
     <table id="transactions-table">
       <thead>
@@ -320,108 +270,79 @@
             data-cat="{{ t.categorie }}">
 
           <td>{{ t.date }}</td>
-
           <td>{{ t.libelle_clean or t.libelle }}</td>
-
-          <td class="montant-{{ t.type }}">
+          <td class="{{ 'neg' if t.type == 'debit' else 'pos' }}">
             {{ '-' if t.type == 'debit' else '+' }}{{ "%.2f"|format(t.montant)|replace('.', ',') }} €
           </td>
-
           <td>{{ 'Dépense' if t.type == 'debit' else 'Entrée' }}</td>
-
           <td>{{ t.personne }}</td>
-
           <td>
-            <!-- Select de catégorie — présent sur toutes les lignes, pas seulement Unknown -->
             <select class="cat-select"
-                    onchange="correctCategory('{{ t.id }}', this.value, this)"
-                    data-original="{{ t.categorie }}">
+                    onchange="correctCategory('{{ t.id }}', this.value, this)">
               {% set categories = [
-                'Alimentation', 'Restaurants & Cafés', 'Transport', 'Shopping',
-                'Abonnements', 'Logement', 'Santé & Beauté', 'Loisirs & Culture',
-                'Voyages', 'Virements', 'Revenus', 'Épargne & Investissement',
-                'Retraits', 'Unknown'
+                'Alimentation','Restaurants & Cafés','Transport','Shopping',
+                'Abonnements','Logement','Santé & Beauté','Loisirs & Culture',
+                'Voyages','Virements','Revenus','Épargne & Investissement',
+                'Retraits','Unknown'
               ] %}
               {% for cat in categories %}
               <option value="{{ cat }}" {{ 'selected' if t.categorie == cat }}>{{ cat }}</option>
               {% endfor %}
             </select>
-
-            <!-- Icône si corrigé manuellement -->
             {% if t.corrige_manuellement %}
-            <span class="corrected-icon" title="Corrigé manuellement">✓</span>
+            <span style="color:var(--green);margin-left:4px;font-size:0.8rem;">✓</span>
             {% endif %}
           </td>
-
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 
-  <!-- Toast de confirmation -->
   <div id="toast"></div>
 
   <script>
-    // ── Variables globales ──
     const SESSION_ID = "{{ session_id }}";
     let unknownCount = {{ stats.unknown }};
     let totalCount = {{ stats.total }};
 
-    // ── Correction d'une catégorie ──
+    // ── Correction catégorie ──
     async function correctCategory(transactionId, newCategory, selectEl) {
       try {
-        const response = await fetch('/api/correct', {
+        await fetch('/api/correct', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            session_id: SESSION_ID,
-            transaction_id: transactionId,
-            categorie: newCategory
-          })
+          body: JSON.stringify({ session_id: SESSION_ID, transaction_id: transactionId, categorie: newCategory })
         });
 
-        const data = await response.json();
+        const row = selectEl.closest('tr');
+        const wasUnknown = row.classList.contains('unknown-row');
 
-        if (data.success) {
-          const row = selectEl.closest('tr');
-          const wasUnknown = row.classList.contains('unknown-row');
+        row.dataset.cat = newCategory;
 
-          // Mise à jour visuelle de la ligne
-          row.dataset.cat = newCategory;
-
-          if (newCategory === 'Unknown') {
-            row.classList.add('unknown-row');
-          } else {
-            row.classList.remove('unknown-row');
-            // Ajoute l'icône ✓ si pas déjà présente
-            if (!row.querySelector('.corrected-icon')) {
-              const icon = document.createElement('span');
-              icon.className = 'corrected-icon';
-              icon.title = 'Corrigé manuellement';
-              icon.textContent = ' ✓';
-              selectEl.parentNode.appendChild(icon);
-            }
+        if (newCategory === 'Unknown') {
+          row.classList.add('unknown-row');
+          if (!wasUnknown) unknownCount++;
+        } else {
+          row.classList.remove('unknown-row');
+          if (wasUnknown) unknownCount = Math.max(0, unknownCount - 1);
+          if (!row.querySelector('.corrected-icon')) {
+            const icon = document.createElement('span');
+            icon.className = 'corrected-icon';
+            icon.style.cssText = 'color:var(--green);margin-left:4px;font-size:0.8rem;';
+            icon.textContent = ' ✓';
+            selectEl.parentNode.appendChild(icon);
           }
-
-          // Mise à jour du compteur Unknown
-          if (wasUnknown && newCategory !== 'Unknown') {
-            unknownCount = Math.max(0, unknownCount - 1);
-          } else if (!wasUnknown && newCategory === 'Unknown') {
-            unknownCount += 1;
-          }
-
-          updateProgressBar();
-          showToast(`✓ "${newCategory}" mémorisé`);
         }
 
-      } catch (err) {
-        showToast('Erreur lors de la sauvegarde', true);
+        updateProgress();
+        showToast('✓ Sauvegardé', 'success');
+      } catch(e) {
+        showToast('Erreur', 'error');
       }
     }
 
-    // ── Mise à jour de la barre de progression ──
-    function updateProgressBar() {
+    function updateProgress() {
       document.getElementById('unknown-count').textContent = unknownCount;
       const pct = Math.round(((totalCount - unknownCount) / totalCount) * 100);
       document.getElementById('progress-fill').style.width = pct + '%';
@@ -430,11 +351,8 @@
 
     // ── Filtres ──
     function filterBy(type, btn) {
-      // Activation du bouton filtre
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
-      // Affichage/masquage des lignes
       document.querySelectorAll('#transactions-table tbody tr').forEach(row => {
         let show = true;
         if (type === 'unknown') show = row.dataset.cat === 'Unknown';
@@ -444,43 +362,28 @@
       });
     }
 
-    // ── Export CSV ──
-    async function exportCSV() {
-      showToast('Génération du CSV en cours…');
-      
+    // ── Sauvegarde dans le dashboard (base SQLite) ──
+    async function saveToDashboard() {
+      showToast('Sauvegarde en cours…', 'success');
       try {
-        const response = await fetch(`/api/export/${SESSION_ID}`, { method: 'POST' });
-
-        if (!response.ok) {
-          showToast('Erreur lors de l\'export', true);
-          return;
+        const res = await fetch(`/api/save/${SESSION_ID}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`✓ ${data.saved} transactions sauvegardées !`, 'success');
+          setTimeout(() => window.location.href = '/', 1500);
+        } else {
+          showToast('Erreur lors de la sauvegarde', 'error');
         }
-
-        // Téléchargement automatique du fichier
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `couplefinance_export.csv`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-
-        showToast('✓ Export téléchargé !');
-
-      } catch (err) {
-        showToast('Erreur réseau', true);
+      } catch(e) {
+        showToast('Erreur réseau', 'error');
       }
     }
 
-    // ── Toast de notification ──
-    function showToast(msg, isError = false) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.style.background = isError ? '#C62828' : 'var(--deep)';
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2500);
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `show ${type}`;
+      setTimeout(() => t.className = '', 2500);
     }
   </script>
 

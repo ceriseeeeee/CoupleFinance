@@ -1,59 +1,71 @@
 """
-CoupleFinance - Application principale Flask
+app.py — Application Flask CoupleFinance v2
 ============================================
-Point d'entrée de l'application. Gère toutes les routes :
-  - Upload de PDFs bancaires
-  - Extraction + catégorisation des transactions
-  - Interface de validation/correction manuelle
-  - Export CSV pour Power BI
+Routes :
+  GET  /              → Dashboard principal
+  GET  /import        → Page d'import de PDFs
+  POST /upload        → Traitement des PDFs
+  GET  /validate/<id> → Validation des transactions
+  POST /api/correct   → Correction d'une catégorie
+  GET  /api/stats     → Stats JSON pour le dashboard
+  GET  /api/transactions → Transactions JSON filtrées
 """
 
-from flask import Flask, render_template, request, jsonify, send_file, session
-import os
-import json
-import uuid
+from flask import Flask, render_template, request, jsonify, session
+import os, json, uuid
 from datetime import datetime
 
 from parser_bourso import parse_bourso_pdf
 from parser_bnp import parse_bnp_pdf
 from categorizer import categorize_transactions, save_user_correction
-from exporter import export_to_csv
+from database import init_db, insert_transactions, update_categorie, get_stats, get_mois_disponibles, get_transactions
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "couplefinance-2026")
 
-# Clé secrète pour les sessions (à changer en prod)
-app.secret_key = "couplefinance-secret-key-2026"
-
-# Dossiers de travail
 UPLOAD_FOLDER = "uploads"
-EXPORT_FOLDER = "exports"
+SESSION_FOLDER = "data"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(EXPORT_FOLDER, exist_ok=True)
+os.makedirs(SESSION_FOLDER, exist_ok=True)
+
+# Init de la base au démarrage
+init_db()
 
 
 # ─────────────────────────────────────────────
-#  PAGE D'ACCUEIL — Upload des PDFs
+#  DASHBOARD PRINCIPAL
 # ─────────────────────────────────────────────
 
 @app.route("/")
-def index():
-    """Page principale avec le formulaire d'upload."""
+def dashboard():
+    """Page dashboard avec graphiques et KPIs."""
+    mois_dispo = get_mois_disponibles()
+    mois_selectionne = request.args.get("mois", mois_dispo[0] if mois_dispo else None)
+    stats = get_stats(mois=mois_selectionne) if mois_selectionne else {}
+    return render_template("dashboard.html",
+                           mois_dispo=mois_dispo,
+                           mois_selectionne=mois_selectionne,
+                           stats=stats)
+
+
+# ─────────────────────────────────────────────
+#  PAGE IMPORT
+# ─────────────────────────────────────────────
+
+@app.route("/import")
+def import_page():
     return render_template("index.html")
 
 
 # ─────────────────────────────────────────────
-#  ROUTE — Traitement des PDFs uploadés
+#  UPLOAD & TRAITEMENT PDF
 # ─────────────────────────────────────────────
 
 @app.route("/upload", methods=["POST"])
 def upload():
-    """
-    Reçoit les PDFs, détecte la banque, extrait les transactions,
-    et redirige vers la page de validation.
-    """
     files = request.files.getlist("pdfs")
-    personne = request.form.get("personne")  # "Cerise" ou "Loïc"
-    
+    personne = request.form.get("personne")
+
     if not files or not personne:
         return jsonify({"error": "Fichiers ou personne manquants"}), 400
 
@@ -63,37 +75,30 @@ def upload():
         if not file.filename.endswith(".pdf"):
             continue
 
-        # Sauvegarde temporaire du PDF
         filename = f"{uuid.uuid4()}_{file.filename}"
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
 
-        # ── Détection automatique de la banque ──
-        # On lit les premiers octets du texte extrait pour identifier la banque
         banque = detect_bank(filepath)
-
-        # ── Parsing selon la banque ──
         if banque == "bourso":
             transactions = parse_bourso_pdf(filepath, personne)
         elif banque == "bnp":
             transactions = parse_bnp_pdf(filepath, personne)
         else:
-            # Banque non reconnue → on passe
             os.remove(filepath)
             continue
 
         all_transactions.extend(transactions)
-        os.remove(filepath)  # Nettoyage du fichier temporaire
+        os.remove(filepath)
 
     if not all_transactions:
         return jsonify({"error": "Aucune transaction extraite"}), 400
 
-    # ── Catégorisation automatique ──
     all_transactions = categorize_transactions(all_transactions)
 
-    # ── Stockage en session pour la page de validation ──
+    # Stockage session temporaire pour la validation
     session_id = str(uuid.uuid4())
-    session_file = os.path.join("data", f"session_{session_id}.json")
+    session_file = os.path.join(SESSION_FOLDER, f"session_{session_id}.json")
     with open(session_file, "w", encoding="utf-8") as f:
         json.dump(all_transactions, f, ensure_ascii=False, indent=2)
 
@@ -106,18 +111,13 @@ def upload():
 
 
 def detect_bank(filepath: str) -> str:
-    """
-    Détecte la banque à partir du contenu du PDF.
-    Retourne 'bourso', 'bnp', ou 'unknown'.
-    """
     import pdfplumber
     try:
         with pdfplumber.open(filepath) as pdf:
-            # On lit uniquement la première page pour la détection
-            first_page_text = pdf.pages[0].extract_text() or ""
-            if "BoursoBank" in first_page_text or "Boursorama" in first_page_text:
+            text = pdf.pages[0].extract_text() or ""
+            if "BoursoBank" in text or "Boursorama" in text:
                 return "bourso"
-            elif "BNP PARIBAS" in first_page_text or "RELEVE DE COMPTE" in first_page_text:
+            elif "BNP PARIBAS" in text or "RELEVE DE COMPTE" in text:
                 return "bnp"
     except Exception:
         pass
@@ -125,23 +125,18 @@ def detect_bank(filepath: str) -> str:
 
 
 # ─────────────────────────────────────────────
-#  PAGE — Validation & correction des transactions
+#  VALIDATION
 # ─────────────────────────────────────────────
 
 @app.route("/validate/<session_id>")
 def validate(session_id):
-    """
-    Affiche toutes les transactions extraites.
-    Les Unknown sont mis en avant pour correction.
-    """
-    session_file = os.path.join("data", f"session_{session_id}.json")
+    session_file = os.path.join(SESSION_FOLDER, f"session_{session_id}.json")
     if not os.path.exists(session_file):
         return "Session introuvable", 404
 
     with open(session_file, "r", encoding="utf-8") as f:
         transactions = json.load(f)
 
-    # Statistiques pour l'en-tête de page
     stats = {
         "total": len(transactions),
         "unknown": sum(1 for t in transactions if t["categorie"] == "Unknown"),
@@ -157,72 +152,77 @@ def validate(session_id):
 
 
 # ─────────────────────────────────────────────
-#  API — Correction d'une catégorie
+#  API — Correction catégorie (session)
 # ─────────────────────────────────────────────
 
 @app.route("/api/correct", methods=["POST"])
 def correct():
-    """
-    Reçoit la correction d'une catégorie par l'utilisateur.
-    Met à jour la session ET mémorise le mot-clé pour l'avenir.
-    """
     data = request.json
     session_id = data.get("session_id")
     transaction_id = data.get("transaction_id")
     new_category = data.get("categorie")
 
-    session_file = os.path.join("data", f"session_{session_id}.json")
-    if not os.path.exists(session_file):
-        return jsonify({"error": "Session introuvable"}), 404
+    # Mise à jour dans la session temporaire
+    if session_id:
+        session_file = os.path.join(SESSION_FOLDER, f"session_{session_id}.json")
+        if os.path.exists(session_file):
+            with open(session_file, "r", encoding="utf-8") as f:
+                transactions = json.load(f)
+            for t in transactions:
+                if t["id"] == transaction_id:
+                    save_user_correction(t["libelle"], new_category)
+                    t["categorie"] = new_category
+                    t["corrige_manuellement"] = True
+                    break
+            with open(session_file, "w", encoding="utf-8") as f:
+                json.dump(transactions, f, ensure_ascii=False, indent=2)
 
-    with open(session_file, "r", encoding="utf-8") as f:
-        transactions = json.load(f)
-
-    # Mise à jour de la transaction dans la session
-    for t in transactions:
-        if t["id"] == transaction_id:
-            old_libelle = t["libelle"]
-            t["categorie"] = new_category
-            t["corrige_manuellement"] = True  # Flag pour traçabilité
-            
-            # Apprentissage : mémorisation du mapping libellé → catégorie
-            save_user_correction(old_libelle, new_category)
-            break
-
-    with open(session_file, "w", encoding="utf-8") as f:
-        json.dump(transactions, f, ensure_ascii=False, indent=2)
+    # Mise à jour en base si déjà sauvegardé
+    update_categorie(transaction_id, new_category)
 
     return jsonify({"success": True})
 
 
 # ─────────────────────────────────────────────
-#  API — Export CSV final
+#  API — Validation finale → sauvegarde en DB
 # ─────────────────────────────────────────────
 
-@app.route("/api/export/<session_id>", methods=["POST"])
-def export(session_id):
-    """
-    Génère le CSV propre à partir des transactions validées.
-    Prêt à être chargé dans Power BI.
-    """
-    session_file = os.path.join("data", f"session_{session_id}.json")
+@app.route("/api/save/<session_id>", methods=["POST"])
+def save_to_db(session_id):
+    """Sauvegarde les transactions validées en base et supprime la session."""
+    session_file = os.path.join(SESSION_FOLDER, f"session_{session_id}.json")
     if not os.path.exists(session_file):
         return jsonify({"error": "Session introuvable"}), 404
 
     with open(session_file, "r", encoding="utf-8") as f:
         transactions = json.load(f)
 
-    # Génération du fichier CSV
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_filename = f"couplefinance_export_{timestamp}.csv"
-    output_path = os.path.join(EXPORT_FOLDER, output_filename)
-
-    export_to_csv(transactions, output_path)
-
-    # Nettoyage de la session après export
+    insert_transactions(transactions)
     os.remove(session_file)
 
-    return send_file(output_path, as_attachment=True, download_name=output_filename)
+    return jsonify({"success": True, "saved": len(transactions)})
+
+
+# ─────────────────────────────────────────────
+#  API — Stats JSON pour le dashboard
+# ─────────────────────────────────────────────
+
+@app.route("/api/stats")
+def api_stats():
+    mois = request.args.get("mois")
+    return jsonify(get_stats(mois=mois))
+
+
+# ─────────────────────────────────────────────
+#  API — Transactions JSON filtrées
+# ─────────────────────────────────────────────
+
+@app.route("/api/transactions")
+def api_transactions():
+    mois = request.args.get("mois")
+    personne = request.args.get("personne")
+    transactions = get_transactions(mois=mois, personne=personne)
+    return jsonify(transactions)
 
 
 if __name__ == "__main__":

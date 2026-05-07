@@ -1,6 +1,3 @@
-# CoupleFinance — Dépendances Python
-# Installation : pip install -r requirements.txt
-
-flask==3.0.3          # Framework web
-pdfplumber==0.11.4    # Extraction de texte/tableaux depuis les PDFs
-gunicorn 
+flask==3.0.3
+pdfplumber==0.11.4
+gunicorn

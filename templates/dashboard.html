@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoupleFinance — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:        #0A0A0F;
+      --surface:   #12121A;
+      --surface2:  #1A1A26;
+      --border:    #2A2A3A;
+      --gold:      #C9A84C;
+      --gold-dim:  #8A6F2E;
+      --green:     #3ECF8E;
+      --red:       #F06A6A;
+      --text:      #E8E8F0;
+      --muted:     #6B6B8A;
+      --white:     #FFFFFF;
+      --radius:    14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 220px;
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.5rem;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      color: var(--gold);
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-sub {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 2.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 400;
+      transition: all 0.2s;
+      margin-bottom: 0.25rem;
+    }
+
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: var(--surface2); color: var(--gold); }
+    .nav-icon { font-size: 1rem; }
+
+    /* ── Main content ── */
+    .main {
+      margin-left: 220px;
+      padding: 2rem 2.5rem;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .header-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.8rem;
+      color: var(--text);
+    }
+
+    .header-title span { color: var(--gold); font-style: italic; }
+
+    /* ── Filtre mois ── */
+    .month-select {
+      padding: 0.55rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .month-select:focus { border-color: var(--gold-dim); }
+
+    /* ── KPI Cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.6rem;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent, var(--border));
+    }
+
+    .kpi-card.green { --accent: var(--green); }
+    .kpi-card.red   { --accent: var(--red); }
+    .kpi-card.gold  { --accent: var(--gold); }
+    .kpi-card.blue  { --accent: #6B8CFF; }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .kpi-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    .kpi-value.pos { color: var(--green); }
+    .kpi-value.neg { color: var(--red); }
+    .kpi-value.gold { color: var(--gold); }
+    .kpi-value.neutral { color: var(--text); }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+    }
+
+    /* ── Grille de graphiques ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .chart-card.full { grid-column: 1 / -1; }
+
+    .chart-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 1.2rem;
+    }
+
+    .chart-container { position: relative; height: 220px; }
+    .chart-container.tall { height: 280px; }
+
+    /* ── Vue par personne ── */
+    .persons-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .person-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .person-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--gold);
+    }
+
+    .person-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+
+    .person-stat:last-child { border-bottom: none; }
+    .person-stat-label { color: var(--muted); }
+    .person-stat-value { font-weight: 500; }
+
+    /* ── Top dépenses ── */
+    .top-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .top-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .top-item:last-child { border-bottom: none; }
+
+    .top-rank {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      color: var(--gold-dim);
+      width: 24px;
+      text-align: center;
+    }
+
+    .top-info { flex: 1; }
+    .top-libelle { font-size: 0.88rem; font-weight: 500; }
+    .top-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .top-montant { color: var(--red); font-weight: 500; font-size: 0.95rem; }
+
+    /* ── État vide ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 2rem;
+      text-align: center;
+    }
+
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+
+    .empty-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.5rem;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+    .btn-primary {
+      padding: 0.8rem 1.6rem;
+      background: var(--gold);
+      color: #0A0A0F;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+
+    /* ── Badge catégorie ── */
+    .cat-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      background: var(--surface2);
+      color: var(--muted);
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="logo">CoupleFinance</div>
+    <div class="logo-sub">Finance tracker</div>
+
+    <a href="/" class="nav-item active">
+      <span class="nav-icon">◈</span> Dashboard
+    </a>
+    <a href="/import" class="nav-item">
+      <span class="nav-icon">⊕</span> Importer
+    </a>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main">
+
+    {% if not mois_dispo %}
+    <!-- État vide : aucune donnée -->
+    <div class="empty-state">
+      <div class="empty-icon">◈</div>
+      <div class="empty-title">Aucune donnée</div>
+      <div class="empty-sub">Importez vos premiers relevés pour voir le dashboard</div>
+      <a href="/import" class="btn-primary">Importer des relevés</a>
+    </div>
+
+    {% else %}
+
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <div class="header-title">Vue <span>{{ mois_selectionne or 'globale' }}</span></div>
+      </div>
+      <div style="display:flex;gap:0.75rem;align-items:center;">
+        <select class="month-select" onchange="window.location='/?mois='+this.value">
+          <option value="">Tous les mois</option>
+          {% for m in mois_dispo %}
+          <option value="{{ m }}" {{ 'selected' if m == mois_selectionne }}>{{ m }}</option>
+          {% endfor %}
+        </select>
+        <a href="/import" class="btn-primary" style="font-size:0.82rem;padding:0.55rem 1rem;">+ Importer</a>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card red">
+        <div class="kpi-label">Dépenses totales</div>
+        <div class="kpi-value neg">−{{ "%.0f"|format(stats.total_depenses) }} €</div>
+        <div class="kpi-sub">{{ stats.nb_transactions }} transactions</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Revenus totaux</div>
+        <div class="kpi-value pos">+{{ "%.0f"|format(stats.total_revenus) }} €</div>
+      </div>
+      <div class="kpi-card {{ 'green' if stats.solde >= 0 else 'red' }} gold">
+        <div class="kpi-label">Solde net</div>
+        <div class="kpi-value {{ 'pos' if stats.solde >= 0 else 'neg' }}">
+          {{ '+' if stats.solde >= 0 else '' }}{{ "%.0f"|format(stats.solde) }} €
+        </div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">À catégoriser</div>
+        <div class="kpi-value neutral">{{ stats.nb_unknown }}</div>
+        <div class="kpi-sub">transactions Unknown</div>
+      </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Dépenses par catégorie</div>
+        <div class="chart-container">
+          <canvas id="chartCategories"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Cerise vs Loïc</div>
+        <div class="chart-container">
+          <canvas id="chartPersonnes"></canvas>
+        </div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Évolution mensuelle</div>
+        <div class="chart-container tall">
+          <canvas id="chartEvolution"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vue par personne -->
+    <div class="persons-grid">
+      {% for personne, data in stats.par_personne.items() %}
+      <div class="person-card">
+        <div class="person-name">{{ personne }}</div>
+        <div class="person-stat">
+          <span class="person-stat-label">Dépenses</span>
+          <span class="person-stat-value neg" style="color:var(--red)">−{{ "%.2f"|format(data.depenses)|replace('.', ',') }} €</span>
+        </div>
+        <div class="person-stat">
+          <span class="person-stat-label">Revenus</span>
+          <span class="person-stat-value pos" style="color:var(--green)">+{{ "%.2f"|format(data.revenus)|replace('.', ',') }} €</span>
+        </div>
+        <div class="person-stat">
+          <span class="person-stat-label">Solde</span>
+          {% set solde = data.revenus - data.depenses %}
+          <span class="person-stat-value" style="color:{{ 'var(--green)' if solde >= 0 else 'var(--red)' }}">
+            {{ '+' if solde >= 0 else '' }}{{ "%.2f"|format(solde)|replace('.', ',') }} €
+          </span>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- Top dépenses -->
+      <div class="top-card">
+        <div class="chart-title">Top 5 dépenses</div>
+        {% for t in stats.top_depenses %}
+        <div class="top-item">
+          <div class="top-rank">{{ loop.index }}</div>
+          <div class="top-info">
+            <div class="top-libelle">{{ t.libelle_clean or t.libelle }}</div>
+            <div class="top-meta">{{ t.date }} · {{ t.personne }} · <span class="cat-badge">{{ t.categorie }}</span></div>
+          </div>
+          <div class="top-montant">−{{ "%.2f"|format(t.montant)|replace('.', ',') }} €</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% endif %}
+  </main>
+
+  <script>
+    // ── Données injectées depuis Flask ──
+    const stats = {{ stats | tojson }};
+
+    // ── Palette de couleurs pour les graphiques ──
+    const COLORS = [
+      '#C9A84C', '#3ECF8E', '#6B8CFF', '#F06A6A', '#A78BFA',
+      '#34D399', '#FB923C', '#F472B6', '#60A5FA', '#FBBF24',
+      '#4ADE80', '#E879F9', '#38BDF8', '#FB7185'
+    ];
+
+    // ── Config globale Chart.js ── dark theme
+    Chart.defaults.color = '#6B6B8A';
+    Chart.defaults.borderColor = '#2A2A3A';
+    Chart.defaults.font.family = 'DM Sans';
+
+    // ── Graphique 1 : Dépenses par catégorie (donut) ──
+    if (stats.par_categorie && Object.keys(stats.par_categorie).length > 0) {
+      const cats = Object.keys(stats.par_categorie);
+      const vals = Object.values(stats.par_categorie);
+
+      new Chart(document.getElementById('chartCategories'), {
+        type: 'doughnut',
+        data: {
+          labels: cats,
+          datasets: [{
+            data: vals,
+            backgroundColor: COLORS.slice(0, cats.length),
+            borderWidth: 0,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { boxWidth: 10, padding: 12, font: { size: 11 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(2).replace('.', ',')} €`
+              }
+            }
+          },
+          cutout: '65%'
+        }
+      });
+    }
+
+    // ── Graphique 2 : Cerise vs Loïc (barres groupées) ──
+    if (stats.par_personne && Object.keys(stats.par_personne).length > 0) {
+      const personnes = Object.keys(stats.par_personne);
+      new Chart(document.getElementById('chartPersonnes'), {
+        type: 'bar',
+        data: {
+          labels: personnes,
+          datasets: [
+            {
+              label: 'Dépenses',
+              data: personnes.map(p => stats.par_personne[p].depenses),
+              backgroundColor: '#F06A6A88',
+              borderColor: '#F06A6A',
+              borderWidth: 1,
+              borderRadius: 6
+            },
+            {
+              label: 'Revenus',
+              data: personnes.map(p => stats.par_personne[p].revenus),
+              backgroundColor: '#3ECF8E88',
+              borderColor: '#3ECF8E',
+              borderWidth: 1,
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { font: { size: 11 } } } },
+          scales: {
+            x: { grid: { display: false } },
+            y: {
+              grid: { color: '#1A1A26' },
+              ticks: { callback: v => v + ' €' }
+            }
+          }
+        }
+      });
+    }
+
+    // ── Graphique 3 : Évolution mensuelle (ligne) ──
+    if (stats.evolution_mensuelle && stats.evolution_mensuelle.length > 0) {
+      const evo = stats.evolution_mensuelle;
+      new Chart(document.getElementById('chartEvolution'), {
+        type: 'line',
+        data: {
+          labels: evo.map(e => e.mois),
+          datasets: [
+            {
+              label: 'Dépenses',
+              data: evo.map(e => e.depenses),
+              borderColor: '#F06A6A',
+              backgroundColor: '#F06A6A18',
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#F06A6A',
+              pointRadius: 4
+            },
+            {
+              label: 'Revenus',
+              data: evo.map(e => e.revenus),
+              borderColor: '#3ECF8E',
+              backgroundColor: '#3ECF8E18',
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: '#3ECF8E',
+              pointRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { font: { size: 11 } } } },
+          scales: {
+            x: { grid: { display: false } },
+            y: {
+              grid: { color: '#1A1A26' },
+              ticks: { callback: v => v + ' €' }
+            }
+          }
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
