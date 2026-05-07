@@ -41,11 +41,13 @@ def dashboard():
     """Page dashboard avec graphiques et KPIs."""
     mois_dispo = get_mois_disponibles()
     mois_selectionne = request.args.get("mois", mois_dispo[0] if mois_dispo else None)
-    stats = get_stats(mois=mois_selectionne) if mois_selectionne else {}
+    stats = get_stats(mois=mois_selectionne) if mois_dispo else {}
+    transactions = get_transactions(mois=mois_selectionne) if mois_dispo else []
     return render_template("dashboard.html",
                            mois_dispo=mois_dispo,
                            mois_selectionne=mois_selectionne,
-                           stats=stats)
+                           stats=stats,
+                           transactions=transactions)
 
 
 # ─────────────────────────────────────────────
@@ -149,8 +151,6 @@ def validate(session_id):
                            transactions=transactions,
                            session_id=session_id,
                            stats=stats)
-
-
 # ─────────────────────────────────────────────
 #  API — Correction catégorie (session)
 # ─────────────────────────────────────────────

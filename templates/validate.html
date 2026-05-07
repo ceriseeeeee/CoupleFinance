@@ -5,27 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CoupleFinance — Validation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:        #0A0A0F;
-      --surface:   #12121A;
-      --surface2:  #1A1A26;
-      --border:    #2A2A3A;
-      --gold:      #C9A84C;
-      --gold-dim:  #8A6F2E;
-      --green:     #3ECF8E;
-      --red:       #F06A6A;
-      --orange:    #E8A838;
-      --text:      #E8E8F0;
-      --muted:     #6B6B8A;
-      --radius:    10px;
+      --bg:        #F4F6F9;
+      --white:     #FFFFFF;
+      --dark:      #1A1A2E;
+      --green:     #2ECC9A;
+      --green-dim: #1A9970;
+      --green-lt:  #E8F8F2;
+      --red:       #F87171;
+      --amber:     #F59E0B;
+      --border:    #E8EBF0;
+      --muted:     #9CA3AF;
+      --text:      #1A1A2E;
+      --shadow:    0 2px 12px rgba(26,26,46,.07);
+      --radius:    14px;
+      --radius-sm: 10px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Nunito', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -33,179 +35,117 @@
 
     /* ── Topbar ── */
     .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: var(--shadow);
     }
 
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
+    .topbar-left { display: flex; align-items: center; gap: 24px; }
 
-    .topbar h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.3rem;
-      color: var(--text);
-    }
+    .topbar h1 { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 600; color: var(--dark); }
+    .topbar h1 span { color: var(--green); }
 
-    .topbar h1 span { color: var(--gold); font-style: italic; }
-
-    /* ── Stats header ── */
-    .stats {
-      display: flex;
-      gap: 1.5rem;
-      align-items: center;
-    }
-
+    /* ── Stats ── */
+    .stats { display: flex; gap: 20px; align-items: center; }
     .stat { text-align: center; }
-    .stat-value { font-size: 1.2rem; font-weight: 500; color: var(--text); }
-    .stat-value.warn { color: var(--orange); }
-    .stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .stat-val { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 600; color: var(--text); }
+    .stat-val.warn { color: var(--amber); }
+    .stat-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 
-    /* ── Barre de progression ── */
-    .progress-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .progress-bar { width: 140px; height: 4px; background: var(--border); border-radius: 2px; }
-    .progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.4s; }
+    /* ── Progress ── */
+    .prog-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .prog-bar { width: 120px; height: 5px; background: var(--border); border-radius: 3px; }
+    .prog-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width .4s; }
 
     /* ── Boutons ── */
     .btn {
-      padding: 0.6rem 1.2rem;
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.2s;
+      padding: 9px 18px; border: none; border-radius: var(--radius-sm);
+      font-family: 'Nunito', sans-serif; font-size: .88rem; font-weight: 600;
+      cursor: pointer; transition: all .2s; text-decoration: none;
     }
-
-    .btn:hover { opacity: 0.85; }
-    .btn-gold { background: var(--gold); color: #0A0A0F; }
+    .btn-dark { background: var(--dark); color: #fff; }
+    .btn-dark:hover { background: var(--green-dim); }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-outline:hover { border-color: var(--green); color: var(--green-dim); }
 
     /* ── Filtres ── */
     .filters {
-      padding: 0.8rem 2rem;
-      display: flex;
-      gap: 0.5rem;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      padding: 12px 32px;
+      display: flex; gap: 8px; flex-wrap: wrap;
+      background: var(--white); border-bottom: 1px solid var(--border);
     }
 
-    .filter-btn {
-      padding: 0.35rem 0.85rem;
-      border: 1px solid var(--border);
-      border-radius: 99px;
-      background: transparent;
-      color: var(--muted);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.78rem;
-      cursor: pointer;
-      transition: all 0.15s;
+    .filter-pill {
+      padding: 5px 14px; border-radius: 99px; font-size: .78rem; font-weight: 500;
+      border: 1px solid var(--border); background: transparent; color: var(--muted);
+      cursor: pointer; transition: all .15s;
     }
-
-    .filter-btn:hover { border-color: var(--gold-dim); color: var(--text); }
-    .filter-btn.active { border-color: var(--gold); background: var(--gold); color: #0A0A0F; }
+    .filter-pill:hover { border-color: var(--green); color: var(--green-dim); }
+    .filter-pill.on { background: var(--green-lt); border-color: var(--green); color: var(--green-dim); }
 
     /* ── Table ── */
-    .table-wrapper { padding: 1.5rem 2rem; }
+    .table-wrapper { padding: 24px 32px; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--surface);
+    .table-card {
+      background: var(--white);
       border-radius: var(--radius);
+      box-shadow: var(--shadow);
       overflow: hidden;
-      border: 1px solid var(--border);
     }
+
+    table { width: 100%; border-collapse: collapse; }
 
     thead th {
-      background: var(--surface2);
-      color: var(--muted);
-      font-weight: 400;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 0.85rem 1rem;
-      text-align: left;
+      background: var(--dark);
+      color: rgba(255,255,255,.7);
+      font-size: .72rem; text-transform: uppercase; letter-spacing: .1em;
+      font-weight: 600; padding: 12px 16px; text-align: left;
     }
 
-    tbody tr {
-      border-bottom: 1px solid var(--border);
-      transition: background 0.15s;
-    }
-
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
     tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: var(--surface2); }
-    tbody tr.unknown-row { border-left: 2px solid var(--orange); }
+    tbody tr:hover { background: var(--bg); }
+    tbody tr.unknown-row { border-left: 3px solid var(--amber); }
 
-    td {
-      padding: 0.7rem 1rem;
-      font-size: 0.85rem;
-      vertical-align: middle;
-    }
+    td { padding: 10px 16px; font-size: .85rem; vertical-align: middle; }
 
     /* ── Badges ── */
     .badge {
-      display: inline-block;
-      padding: 0.2rem 0.6rem;
-      border-radius: 4px;
-      font-size: 0.72rem;
-      background: var(--surface2);
-      color: var(--muted);
+      display: inline-block; padding: 3px 8px; border-radius: 6px;
+      font-size: .72rem; font-weight: 500;
+      background: var(--bg); color: var(--muted);
     }
-
-    .badge.unknown { background: #3A2A0A; color: var(--orange); }
+    .badge.unknown { background: #FEF3C7; color: #B45309; }
 
     /* ── Montants ── */
-    .neg { color: var(--red); }
-    .pos { color: var(--green); }
+    .neg { color: var(--red); font-weight: 600; }
+    .pos { color: var(--green); font-weight: 600; }
 
     /* ── Select catégorie ── */
     .cat-select {
-      padding: 0.3rem 0.6rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--surface2);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.8rem;
-      cursor: pointer;
-      min-width: 170px;
-      outline: none;
+      padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--white); color: var(--text);
+      font-family: 'Nunito', sans-serif; font-size: .8rem; cursor: pointer;
+      min-width: 170px; outline: none; transition: border-color .2s;
     }
+    .cat-select:focus { border-color: var(--green); }
 
-    .cat-select:focus { border-color: var(--gold-dim); }
+    /* ── Icône corrigé ── */
+    .corrected { color: var(--green); margin-left: 4px; font-size: .8rem; }
 
     /* ── Toast ── */
     #toast {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.75rem 1.25rem;
-      border-radius: var(--radius);
-      font-size: 0.85rem;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.3s;
-      pointer-events: none;
-      z-index: 999;
+      position: fixed; bottom: 2rem; right: 2rem;
+      background: var(--dark); color: #fff;
+      padding: 10px 18px; border-radius: var(--radius-sm);
+      font-size: .85rem; opacity: 0; transform: translateY(8px);
+      transition: all .3s; pointer-events: none; z-index: 999;
     }
-
     #toast.show { opacity: 1; transform: translateY(0); }
-    #toast.success { border-color: var(--green); }
-    #toast.error { border-color: var(--red); }
+    #toast.success { background: var(--green-dim); }
+    #toast.error { background: var(--red); }
   </style>
 </head>
 <body>
@@ -216,87 +156,92 @@
       <h1>CoupleFinance — <span>Validation</span></h1>
       <div class="stats">
         <div class="stat">
-          <div class="stat-value">{{ stats.total }}</div>
+          <div class="stat-val">{{ stats.total }}</div>
           <div class="stat-label">Transactions</div>
         </div>
         <div class="stat">
-          <div class="stat-value warn" id="unknown-count">{{ stats.unknown }}</div>
+          <div class="stat-val warn" id="unknown-count">{{ stats.unknown }}</div>
           <div class="stat-label">Unknown</div>
         </div>
-        <div class="progress-wrap">
-          <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill"
+        <div class="prog-wrap">
+          <div class="prog-bar">
+            <div class="prog-fill" id="prog-fill"
                  style="width: {{ ((stats.categorized / stats.total) * 100) | int }}%"></div>
           </div>
-          <div class="stat-label"><span id="progress-pct">{{ ((stats.categorized / stats.total) * 100) | int }}</span>% catégorisé</div>
+          <div class="stat-label">
+            <span id="prog-pct">{{ ((stats.categorized / stats.total) * 100) | int }}</span>% catégorisé
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat-val neg">−{{ "%.0f"|format(stats.total_debit) }} €</div>
+          <div class="stat-label">Dépenses</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val pos">+{{ "%.0f"|format(stats.total_credit) }} €</div>
+          <div class="stat-label">Entrées</div>
         </div>
       </div>
     </div>
-
-    <div style="display:flex;gap:0.75rem;">
-      <!-- Bouton principal : sauvegarde dans le dashboard -->
-      <button class="btn btn-gold" onclick="saveToDashboard()">
-        ◈ Sauvegarder dans le dashboard
-      </button>
+    <div style="display:flex;gap:10px;">
+      <a href="/import" class="btn btn-outline">← Retour</a>
+      <button class="btn btn-dark" onclick="saveToDashboard()">◈ Sauvegarder dans le dashboard</button>
     </div>
   </div>
 
   <!-- Filtres -->
   <div class="filters">
-    <button class="filter-btn active" onclick="filterBy('all', this)">Tout</button>
-    <button class="filter-btn" onclick="filterBy('unknown', this)">⚠ Unknown</button>
-    <button class="filter-btn" onclick="filterBy('debit', this)">Dépenses</button>
-    <button class="filter-btn" onclick="filterBy('credit', this)">Entrées</button>
+    <button class="filter-pill on" onclick="filterBy('all', this)">Tout</button>
+    <button class="filter-pill" onclick="filterBy('unknown', this)">⚠ Unknown</button>
+    <button class="filter-pill" onclick="filterBy('debit', this)">Dépenses</button>
+    <button class="filter-pill" onclick="filterBy('credit', this)">Entrées</button>
+    <button class="filter-pill" onclick="filterBy('cerise', this)">Cerise</button>
+    <button class="filter-pill" onclick="filterBy('loic', this)">Loïc</button>
   </div>
 
-  <!-- Tableau -->
+  <!-- Table -->
   <div class="table-wrapper">
-    <table id="transactions-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Libellé</th>
-          <th>Montant</th>
-          <th>Type</th>
-          <th>Personne</th>
-          <th>Catégorie</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for t in transactions %}
-        <tr class="{{ 'unknown-row' if t.categorie == 'Unknown' else '' }}"
-            data-id="{{ t.id }}"
-            data-type="{{ t.type }}"
-            data-cat="{{ t.categorie }}">
-
-          <td>{{ t.date }}</td>
-          <td>{{ t.libelle_clean or t.libelle }}</td>
-          <td class="{{ 'neg' if t.type == 'debit' else 'pos' }}">
-            {{ '-' if t.type == 'debit' else '+' }}{{ "%.2f"|format(t.montant)|replace('.', ',') }} €
-          </td>
-          <td>{{ 'Dépense' if t.type == 'debit' else 'Entrée' }}</td>
-          <td>{{ t.personne }}</td>
-          <td>
-            <select class="cat-select"
-                    onchange="correctCategory('{{ t.id }}', this.value, this)">
-              {% set categories = [
-                'Alimentation','Restaurants & Cafés','Transport','Shopping',
-                'Abonnements','Logement','Santé & Beauté','Loisirs & Culture',
-                'Voyages','Virements','Revenus','Épargne & Investissement',
-                'Retraits','Unknown'
-              ] %}
-              {% for cat in categories %}
-              <option value="{{ cat }}" {{ 'selected' if t.categorie == cat }}>{{ cat }}</option>
-              {% endfor %}
-            </select>
-            {% if t.corrige_manuellement %}
-            <span style="color:var(--green);margin-left:4px;font-size:0.8rem;">✓</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="table-card">
+      <table id="txn-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Libellé</th>
+            <th>Montant</th>
+            <th>Type</th>
+            <th>Personne</th>
+            <th>Catégorie</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in transactions %}
+          <tr class="{{ 'unknown-row' if t.categorie == 'Unknown' else '' }}"
+              data-id="{{ t.id }}"
+              data-type="{{ t.type }}"
+              data-cat="{{ t.categorie }}"
+              data-personne="{{ t.personne|lower }}">
+            <td style="color:var(--muted)">{{ t.date }}</td>
+            <td style="font-weight:500">{{ t.libelle_clean or t.libelle }}</td>
+            <td class="{{ 'neg' if t.type == 'debit' else 'pos' }}">
+              {{ '-' if t.type == 'debit' else '+' }}{{ "%.2f"|format(t.montant)|replace('.', ',') }} €
+            </td>
+            <td>{{ 'Dépense' if t.type == 'debit' else 'Entrée' }}</td>
+            <td>{{ t.personne }}</td>
+            <td>
+              <select class="cat-select" onchange="correctCategory('{{ t.id }}', this.value, this)">
+                {% set cats = ['Alimentation','Restaurants & Cafés','Transport','Shopping',
+                  'Abonnements','Logement','Santé & Beauté','Loisirs & Culture',
+                  'Voyages','Virements','Revenus','Épargne & Investissement','Retraits','Unknown'] %}
+                {% for cat in cats %}
+                <option value="{{ cat }}" {{ 'selected' if t.categorie == cat }}>{{ cat }}</option>
+                {% endfor %}
+              </select>
+              {% if t.corrige_manuellement %}<span class="corrected">✓</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div id="toast"></div>
@@ -306,63 +251,54 @@
     let unknownCount = {{ stats.unknown }};
     let totalCount = {{ stats.total }};
 
-    // ── Correction catégorie ──
-    async function correctCategory(transactionId, newCategory, selectEl) {
+    async function correctCategory(id, cat, sel) {
       try {
         await fetch('/api/correct', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: SESSION_ID, transaction_id: transactionId, categorie: newCategory })
+          body: JSON.stringify({ session_id: SESSION_ID, transaction_id: id, categorie: cat })
         });
-
-        const row = selectEl.closest('tr');
+        const row = sel.closest('tr');
         const wasUnknown = row.classList.contains('unknown-row');
-
-        row.dataset.cat = newCategory;
-
-        if (newCategory === 'Unknown') {
+        row.dataset.cat = cat;
+        if (cat === 'Unknown') {
           row.classList.add('unknown-row');
           if (!wasUnknown) unknownCount++;
         } else {
           row.classList.remove('unknown-row');
           if (wasUnknown) unknownCount = Math.max(0, unknownCount - 1);
-          if (!row.querySelector('.corrected-icon')) {
-            const icon = document.createElement('span');
-            icon.className = 'corrected-icon';
-            icon.style.cssText = 'color:var(--green);margin-left:4px;font-size:0.8rem;';
-            icon.textContent = ' ✓';
-            selectEl.parentNode.appendChild(icon);
+          if (!row.querySelector('.corrected')) {
+            const ic = document.createElement('span');
+            ic.className = 'corrected'; ic.textContent = ' ✓';
+            sel.parentNode.appendChild(ic);
           }
         }
-
         updateProgress();
-        showToast('✓ Sauvegardé', 'success');
-      } catch(e) {
-        showToast('Erreur', 'error');
-      }
+        showToast('✓ Catégorie sauvegardée', 'success');
+      } catch(e) { showToast('Erreur', 'error'); }
     }
 
     function updateProgress() {
       document.getElementById('unknown-count').textContent = unknownCount;
       const pct = Math.round(((totalCount - unknownCount) / totalCount) * 100);
-      document.getElementById('progress-fill').style.width = pct + '%';
-      document.getElementById('progress-pct').textContent = pct;
+      document.getElementById('prog-fill').style.width = pct + '%';
+      document.getElementById('prog-pct').textContent = pct;
     }
 
-    // ── Filtres ──
     function filterBy(type, btn) {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.querySelectorAll('#transactions-table tbody tr').forEach(row => {
+      document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      document.querySelectorAll('#txn-table tbody tr').forEach(row => {
         let show = true;
         if (type === 'unknown') show = row.dataset.cat === 'Unknown';
         if (type === 'debit')   show = row.dataset.type === 'debit';
         if (type === 'credit')  show = row.dataset.type === 'credit';
+        if (type === 'cerise')  show = row.dataset.personne === 'cerise';
+        if (type === 'loic')    show = row.dataset.personne === 'loïc';
         row.style.display = show ? '' : 'none';
       });
     }
 
-    // ── Sauvegarde dans le dashboard (base SQLite) ──
     async function saveToDashboard() {
       showToast('Sauvegarde en cours…', 'success');
       try {
@@ -372,11 +308,9 @@
           showToast(`✓ ${data.saved} transactions sauvegardées !`, 'success');
           setTimeout(() => window.location.href = '/', 1500);
         } else {
-          showToast('Erreur lors de la sauvegarde', 'error');
+          showToast('Erreur', 'error');
         }
-      } catch(e) {
-        showToast('Erreur réseau', 'error');
-      }
+      } catch(e) { showToast('Erreur réseau', 'error'); }
     }
 
     function showToast(msg, type = 'success') {
@@ -386,6 +320,5 @@
       setTimeout(() => t.className = '', 2500);
     }
   </script>
-
 </body>
 </html>

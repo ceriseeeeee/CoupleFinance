@@ -5,351 +5,316 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CoupleFinance — Import</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
-    /* ── Variables palette vert fusion banque privée ── */
     :root {
-      --deep:    #0D5C4A;
-      --emerald: #3D9670;
-      --mint:    #6AB89A;
-      --sage:    #B8DDD0;
-      --light:   #D4EFE6;
-      --bg:      #F7FBF9;
-      --text:    #193828;
-      --muted:   #6B8F82;
-      --white:   #FFFFFF;
-      --unknown: #E8A838;
-      --radius:  12px;
+      --bg:        #F4F6F9;
+      --white:     #FFFFFF;
+      --dark:      #1A1A2E;
+      --dark2:     #16213E;
+      --green:     #2ECC9A;
+      --green-dim: #1A9970;
+      --green-lt:  #E8F8F2;
+      --red:       #F87171;
+      --border:    #E8EBF0;
+      --muted:     #9CA3AF;
+      --text:      #1A1A2E;
+      --shadow:    0 2px 12px rgba(26,26,46,.07);
+      --radius:    14px;
+      --radius-sm: 10px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Outfit', sans-serif;
+      font-family: 'Nunito', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       display: flex;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 230px;
+      min-height: 100vh;
+      background: var(--white);
+      border-right: 1px solid var(--border);
+      display: flex;
       flex-direction: column;
+      padding: 28px 16px;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+    }
+
+    .logo { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 600; color: var(--dark); margin-bottom: 4px; padding: 0 8px; }
+    .logo span { color: var(--green); }
+    .logo-sub { font-size: .72rem; color: var(--muted); padding: 0 8px; margin-bottom: 32px; }
+    .nav-section { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding: 0 8px; margin-bottom: 8px; margin-top: 16px; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      font-size: .88rem; font-weight: 500; color: var(--muted);
+      cursor: pointer; transition: all .18s; text-decoration: none; margin-bottom: 2px;
+    }
+    .nav-item:hover { background: var(--bg); color: var(--text); }
+    .nav-item.active { background: var(--green-lt); color: var(--green-dim); }
+    .nav-bottom { margin-top: auto; }
+
+    /* ── Main ── */
+    .main {
+      margin-left: 230px;
+      flex: 1;
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: var(--dark);
+      border-radius: var(--radius);
+      padding: 24px 32px;
+      margin-bottom: 32px;
+      display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 2rem;
+      justify-content: space-between;
     }
 
-    /* ── En-tête ── */
-    header {
-      text-align: center;
-      margin-bottom: 3rem;
+    .hero h1 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    .hero p { font-size: .88rem; color: #7C8DB5; }
+    .hero-illo { font-size: 3.5rem; }
+
+    /* ── Contenu centré ── */
+    .content-wrap {
+      max-width: 580px;
+      margin: 0 auto;
+      width: 100%;
     }
 
-    header h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.8rem;
-      font-weight: 600;
-      color: var(--deep);
-      letter-spacing: -0.02em;
-    }
-
-    header p {
-      color: var(--muted);
-      font-weight: 300;
-      margin-top: 0.5rem;
-      font-size: 1rem;
-    }
-
-    /* ── Carte principale ── */
+    /* ── Card ── */
     .card {
       background: var(--white);
       border-radius: var(--radius);
-      padding: 2.5rem;
-      width: 100%;
-      max-width: 560px;
-      box-shadow: 0 4px 24px rgba(13, 92, 74, 0.08);
-      border: 1px solid var(--sage);
+      padding: 28px 32px;
+      box-shadow: var(--shadow);
     }
 
-    /* ── Sélection de la personne ── */
-    .personne-group {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
+    /* ── Sélection personne ── */
+    .person-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
     }
 
-    .personne-btn {
-      flex: 1;
-      padding: 0.9rem;
-      border: 2px solid var(--sage);
-      border-radius: var(--radius);
+    .person-btn {
+      padding: 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
       background: transparent;
       color: var(--muted);
-      font-family: 'Outfit', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 500;
+      font-family: 'Nunito', sans-serif;
+      font-size: .95rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .personne-btn:hover {
-      border-color: var(--mint);
-      color: var(--deep);
-    }
-
-    .personne-btn.active {
-      border-color: var(--deep);
-      background: var(--deep);
-      color: var(--white);
-    }
-
-    /* ── Zone de drop ── */
-    .drop-zone {
-      border: 2px dashed var(--sage);
-      border-radius: var(--radius);
-      padding: 3rem 2rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      position: relative;
-    }
-
-    .drop-zone:hover,
-    .drop-zone.dragover {
-      border-color: var(--emerald);
-      background: var(--light);
-    }
-
-    .drop-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-      width: 100%;
-      height: 100%;
-    }
-
-    .drop-icon {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .drop-zone h3 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.3rem;
-      color: var(--deep);
-      margin-bottom: 0.4rem;
-    }
-
-    .drop-zone p {
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
-
-    /* ── Liste des fichiers sélectionnés ── */
-    #file-list {
-      margin-top: 1.2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .file-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.6rem 1rem;
-      background: var(--light);
-      border-radius: 8px;
-      font-size: 0.85rem;
-      color: var(--deep);
-    }
-
-    .file-item span.name { flex: 1; font-weight: 500; }
-    .file-item span.size { color: var(--muted); }
-
-    /* ── Bouton submit ── */
-    .btn-submit {
-      width: 100%;
-      margin-top: 1.5rem;
-      padding: 1rem;
-      background: var(--deep);
-      color: var(--white);
-      border: none;
-      border-radius: var(--radius);
-      font-family: 'Outfit', sans-serif;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      letter-spacing: 0.02em;
-      transition: background 0.2s ease;
+      transition: all .2s;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.6rem;
+      gap: 8px;
     }
 
-    .btn-submit:hover:not(:disabled) { background: var(--emerald); }
-    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .person-btn:hover { border-color: var(--green); color: var(--text); }
+    .person-btn.active { border-color: var(--green); background: var(--green-lt); color: var(--green-dim); }
 
-    /* ── Message d'erreur ── */
+    /* ── Zone de drop ── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .25s;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover { border-color: var(--green); background: var(--green-lt); }
+
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+
+    .drop-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .drop-zone h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; color: var(--text); margin-bottom: 6px; }
+    .drop-zone p { font-size: .82rem; color: var(--muted); }
+
+    /* ── Liste fichiers ── */
+    #file-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
+    .file-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: var(--bg);
+      border-radius: var(--radius-sm); font-size: .85rem;
+    }
+
+    .file-item .name { flex: 1; font-weight: 500; }
+    .file-item .size { color: var(--muted); font-size: .78rem; }
+
+    /* ── Bouton submit ── */
+    .btn-submit {
+      width: 100%; padding: 14px;
+      background: var(--dark); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+
+    .btn-submit:hover:not(:disabled) { background: var(--green-dim); }
+    .btn-submit:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* ── Erreur ── */
     .error-msg {
-      margin-top: 1rem;
-      padding: 0.75rem 1rem;
-      background: #FEE;
-      border: 1px solid #FCC;
-      border-radius: 8px;
-      color: #C00;
-      font-size: 0.85rem;
-      display: none;
+      padding: 10px 14px; background: #FEE2E2;
+      border: 1px solid #FCA5A5; border-radius: 8px;
+      color: #991B1B; font-size: .82rem; margin-bottom: 12px; display: none;
     }
 
     /* ── Loader ── */
-    .loader {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      padding: 2rem;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    .spinner {
-      width: 36px;
-      height: 36px;
-      border: 3px solid var(--sage);
-      border-top-color: var(--deep);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
+    .loader { display: none; flex-direction: column; align-items: center; gap: 10px; padding: 20px; color: var(--muted); font-size: .88rem; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>CoupleFinance</h1>
-    <p>Import & traitement de vos relevés bancaires</p>
-  </header>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">Couple<span>Finance</span></div>
+    <div class="logo-sub">Tableau de bord financier</div>
+    <div class="nav-section">Menu</div>
+    <a class="nav-item" href="/">◈ Overview</a>
+    <a class="nav-item" href="/">≡ Transactions</a>
+    <a class="nav-item" href="/">◎ Budget</a>
+    <a class="nav-item" href="/">◇ Savings</a>
+    <div class="nav-bottom">
+      <div class="nav-section">Compte</div>
+      <a class="nav-item active" href="/import">⊕ Importer</a>
+    </div>
+  </aside>
 
-  <div class="card">
+  <!-- Main -->
+  <main class="main">
 
-    <!-- Sélection de la personne titulaire du compte -->
-    <div class="personne-group">
-      <button class="personne-btn" data-value="Cerise" onclick="selectPersonne(this)">👩 Cerise</button>
-      <button class="personne-btn" data-value="Loïc" onclick="selectPersonne(this)">👨 Loïc</button>
+    <div class="hero">
+      <div>
+        <h1>Importer des relevés</h1>
+        <p>BoursoBank & BNP Paribas détectés automatiquement</p>
+      </div>
+      <div class="hero-illo">📂</div>
     </div>
 
-    <!-- Zone de drop de PDFs -->
-    <div class="drop-zone" id="drop-zone">
-      <input type="file" id="file-input" multiple accept=".pdf" onchange="handleFiles(this.files)">
-      <div class="drop-icon">📄</div>
-      <h3>Déposer les relevés PDF ici</h3>
-      <p>BoursoBank & BNP Paribas — plusieurs fichiers acceptés</p>
+    <div class="content-wrap">
+      <div class="card">
+
+        <!-- Sélection personne -->
+        <div class="person-grid">
+          <button class="person-btn" data-value="Cerise" onclick="selectPersonne(this)">
+            🌸 Cerise
+          </button>
+          <button class="person-btn" data-value="Loïc" onclick="selectPersonne(this)">
+            🌿 Loïc
+          </button>
+        </div>
+
+        <!-- Drop zone -->
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" multiple accept=".pdf" onchange="handleFiles(this.files)">
+          <div class="drop-icon">📄</div>
+          <h3>Déposer les relevés PDF ici</h3>
+          <p>ou cliquer pour sélectionner · plusieurs fichiers acceptés</p>
+        </div>
+
+        <!-- Fichiers sélectionnés -->
+        <div id="file-list"></div>
+
+        <!-- Erreur -->
+        <div class="error-msg" id="error-msg"></div>
+
+        <!-- Loader -->
+        <div class="loader" id="loader">
+          <div class="spinner"></div>
+          <span>Extraction et catégorisation en cours…</span>
+        </div>
+
+        <!-- Submit -->
+        <button class="btn-submit" id="btn-submit" onclick="submitUpload()" disabled>
+          → Analyser les relevés
+        </button>
+
+      </div>
     </div>
-
-    <!-- Liste des fichiers choisis -->
-    <div id="file-list"></div>
-
-    <!-- Erreur -->
-    <div class="error-msg" id="error-msg"></div>
-
-    <!-- Loader pendant le traitement -->
-    <div class="loader" id="loader">
-      <div class="spinner"></div>
-      <span>Extraction et catégorisation en cours…</span>
-    </div>
-
-    <!-- Bouton d'envoi -->
-    <button class="btn-submit" id="btn-submit" onclick="submitUpload()" disabled>
-      <span>→</span> Analyser les relevés
-    </button>
-
-  </div>
+  </main>
 
   <script>
-    // ── État global de la page ──
     let selectedPersonne = null;
     let selectedFiles = [];
 
-    // ── Sélection de la personne ──
     function selectPersonne(btn) {
-      document.querySelectorAll('.personne-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.person-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedPersonne = btn.dataset.value;
-      updateSubmitState();
+      updateSubmit();
     }
 
-    // ── Gestion des fichiers déposés ou sélectionnés ──
     function handleFiles(files) {
       selectedFiles = Array.from(files).filter(f => f.name.endsWith('.pdf'));
-      renderFileList();
-      updateSubmitState();
+      renderFiles();
+      updateSubmit();
     }
 
-    function renderFileList() {
-      const list = document.getElementById('file-list');
-      list.innerHTML = selectedFiles.map(f => `
+    function renderFiles() {
+      document.getElementById('file-list').innerHTML = selectedFiles.map(f => `
         <div class="file-item">
           <span>📑</span>
           <span class="name">${f.name}</span>
-          <span class="size">${(f.size / 1024).toFixed(0)} Ko</span>
+          <span class="size">${(f.size/1024).toFixed(0)} Ko</span>
         </div>
       `).join('');
     }
 
-    // ── Activation du bouton submit ──
-    function updateSubmitState() {
-      const btn = document.getElementById('btn-submit');
-      btn.disabled = !(selectedPersonne && selectedFiles.length > 0);
+    function updateSubmit() {
+      document.getElementById('btn-submit').disabled = !(selectedPersonne && selectedFiles.length > 0);
     }
 
-    // ── Drag & Drop ──
-    const dropZone = document.getElementById('drop-zone');
+    const dz = document.getElementById('drop-zone');
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
 
-    dropZone.addEventListener('dragover', e => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
-
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      handleFiles(e.dataTransfer.files);
-    });
-
-    // ── Envoi du formulaire ──
     async function submitUpload() {
-      if (!selectedPersonne || selectedFiles.length === 0) return;
-
-      // Affiche le loader, masque le bouton
+      if (!selectedPersonne || !selectedFiles.length) return;
       document.getElementById('loader').style.display = 'flex';
       document.getElementById('btn-submit').disabled = true;
       document.getElementById('error-msg').style.display = 'none';
 
-      // Construction du FormData
-      const formData = new FormData();
-      formData.append('personne', selectedPersonne);
-      selectedFiles.forEach(f => formData.append('pdfs', f));
+      const fd = new FormData();
+      fd.append('personne', selectedPersonne);
+      selectedFiles.forEach(f => fd.append('pdfs', f));
 
       try {
-        const response = await fetch('/upload', {
-          method: 'POST',
-          body: formData
-        });
-
-        const data = await response.json();
-
+        const res = await fetch('/upload', { method: 'POST', body: fd });
+        const data = await res.json();
         if (data.success) {
-          // Redirection vers la page de validation
           window.location.href = `/validate/${data.session_id}`;
         } else {
           showError(data.error || 'Erreur lors du traitement.');
         }
-
-      } catch (err) {
-        showError('Erreur réseau. Vérifiez que le serveur est bien lancé.');
+      } catch(e) {
+        showError('Erreur réseau.');
       } finally {
         document.getElementById('loader').style.display = 'none';
         document.getElementById('btn-submit').disabled = false;
@@ -362,6 +327,5 @@
       el.style.display = 'block';
     }
   </script>
-
 </body>
 </html>
