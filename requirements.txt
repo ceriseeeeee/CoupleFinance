@@ -3,3 +3,4 @@
 
 flask==3.0.3          # Framework web
 pdfplumber==0.11.4    # Extraction de texte/tableaux depuis les PDFs
+gunicorn 
