@@ -479,30 +479,30 @@
     <div class="kpi-grid">
       <div class="kpi-card dark">
         <div class="kpi-label">Solde restant</div>
-        <div class="kpi-val" style="color:{{ 'var(--green)' if stats.solde >= 0 else 'var(--red)' }}">
-          {{ '+' if stats.solde >= 0 else '' }}{{ "%.0f"|format(stats.solde) }} €
+        <div class="kpi-val" style="color:{{ 'var(--green)' if stats.get('solde', 0) >= 0 else 'var(--red)' }}">
+          {{ '+' if stats.get('solde', 0) >= 0 else '' }}{{ "%.0f"|format(stats.get('solde', 0)) }} €
         </div>
         <div class="kpi-sub">Ce mois</div>
       </div>
       <div class="kpi-card green">
         <div class="kpi-label">Revenus</div>
-        <div class="kpi-val" style="color:var(--green)">{{ "%.0f"|format(stats.total_revenus) }} €</div>
+        <div class="kpi-val" style="color:var(--green)">{{ "%.0f"|format(stats.get('total_revenus', 0)) }} €</div>
         <div class="kpi-sub up">↑ Entrées</div>
       </div>
       <div class="kpi-card red">
         <div class="kpi-label">Dépenses éffectuées</div>
-        <div class="kpi-val" style="color:var(--red)">{{ "%.0f"|format(stats.total_depenses) }} €</div>
+        <div class="kpi-val" style="color:var(--red)">{{ "%.0f"|format(stats.get('total_depenses', 0)) }} €</div>
         <div class="kpi-sub down">↓ Sorties</div>
       </div>
       <div class="kpi-card amber">
         <div class="kpi-label">Épargne</div>
-        <div class="kpi-val" style="color:var(--amber)">{{ "%.0f"|format([stats.solde, 0]|max) }} €</div>
+        <div class="kpi-val" style="color:var(--amber)">{{ "%.0f"|format([stats.get('solde', 0), 0]|max) }} €</div>
         <div class="kpi-sub">Estimée</div>
       </div>
       <div class="kpi-card blue">
         <div class="kpi-label">Nbre de transactions</div>
-        <div class="kpi-val" style="color:var(--blue)">{{ stats.nb_transactions }}</div>
-        <div class="kpi-sub {{ 'down' if stats.nb_unknown > 0 else '' }}">{{ stats.nb_unknown }} inconnues</div>
+        <div class="kpi-val" style="color:var(--blue)">{{ stats.get('nb_transactions', 0) }}</div>
+        <div class="kpi-sub {{ 'down' if stats.get('nb_unknown', 0) > 0 else '' }}">{{ stats.get('nb_unknown', 0) }} inconnues</div>
       </div>
     </div>
 
@@ -533,7 +533,7 @@
           <th>Personne</th><th>Catégorie</th><th style="text-align:right">Montant</th>
         </tr></thead>
         <tbody>
-          {% for t in stats.top_depenses %}
+          {% for t in stats.get('top_depenses', []) %}
           <tr>
             <td style="color:var(--muted);font-weight:600;">{{ loop.index }}</td>
             <td style="color:var(--muted)">{{ t.date }}</td>
@@ -619,7 +619,7 @@
           'Investissements': 200, 'Abonnements': 126, 'Electricité': 100
         } %}
         {% for cat, prevu in budget_prevu.items() %}
-        {% set realise = stats.par_categorie.get(cat, 0) %}
+        {% set realise = stats.get('par_categorie', {}).get(cat, 0) %}
         {% set pct = ((realise / prevu) * 100)|int if prevu > 0 else 0 %}
         <div class="budget-row">
           <span style="font-weight:500;font-size:.82rem">{{ cat }}</span>
@@ -692,9 +692,9 @@
             <div class="goal-sub">Objectif : 400 € / mois</div>
           </div>
         </div>
-        <div class="goal-amount">{{ "%.0f"|format([stats.solde, 0]|max) }} €</div>
+        <div class="goal-amount">{{ "%.0f"|format([stats.get('solde', 0), 0]|max) }} €</div>
         <div class="goal-target">épargné ce mois</div>
-        {% set savpct = (([stats.solde, 0]|max / 400) * 100)|int %}
+        {% set savpct = (([stats.get('solde', 0), 0]|max / 400) * 100)|int %}
         <div class="goal-bar-track">
           <div class="goal-bar-fill" style="width:{{ [savpct, 100]|min }}%;background:{{ '#F87171' if savpct < 50 else '#2ECC9A' }};"></div>
         </div>
