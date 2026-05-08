@@ -271,7 +271,10 @@
     }
 
     function handleFiles(files) {
-      selectedFiles = Array.from(files).filter(f => f.name.endsWith('.pdf') || f.name.endsWith('.csv'));
+      selectedFiles = Array.from(files).filter(f => {
+        const lower = f.name.toLowerCase();
+        return lower.endsWith('.pdf') || lower.endsWith('.csv');
+      });
       renderFiles();
       updateSubmit();
     }

@@ -52,47 +52,49 @@ def placeholder(n=1):
 # ─────────────────────────────────────────────
 
 def init_db():
-    """Crée la table transactions si elle n'existe pas."""
+    """Crée les tables transactions et user_mapping si elles n'existent pas."""
     conn = get_connection()
     try:
         cur = conn.cursor()
 
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS transactions (
+                id TEXT PRIMARY KEY,
+                date TEXT NOT NULL,
+                mois TEXT NOT NULL,
+                libelle TEXT,
+                libelle_clean TEXT,
+                montant REAL NOT NULL,
+                type TEXT NOT NULL,
+                personne TEXT NOT NULL,
+                banque TEXT,
+                categorie TEXT DEFAULT 'Unknown',
+                corrige_manuellement INTEGER DEFAULT 0
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_mois ON transactions(mois)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_personne ON transactions(personne)")
+
         if is_postgres():
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS transactions (
-                    id TEXT PRIMARY KEY,
-                    date TEXT NOT NULL,
-                    mois TEXT NOT NULL,
-                    libelle TEXT,
-                    libelle_clean TEXT,
-                    montant REAL NOT NULL,
-                    type TEXT NOT NULL,
-                    personne TEXT NOT NULL,
-                    banque TEXT,
-                    categorie TEXT DEFAULT 'Unknown',
-                    corrige_manuellement INTEGER DEFAULT 0
+                CREATE TABLE IF NOT EXISTS user_mapping (
+                    id SERIAL PRIMARY KEY,
+                    personne TEXT UNIQUE NOT NULL,
+                    display_name TEXT,
+                    couleur TEXT,
+                    created_at TIMESTAMP DEFAULT NOW()
                 )
             """)
-            cur.execute("CREATE INDEX IF NOT EXISTS idx_mois ON transactions(mois)")
-            cur.execute("CREATE INDEX IF NOT EXISTS idx_personne ON transactions(personne)")
         else:
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS transactions (
-                    id TEXT PRIMARY KEY,
-                    date TEXT NOT NULL,
-                    mois TEXT NOT NULL,
-                    libelle TEXT,
-                    libelle_clean TEXT,
-                    montant REAL NOT NULL,
-                    type TEXT NOT NULL,
-                    personne TEXT NOT NULL,
-                    banque TEXT,
-                    categorie TEXT DEFAULT 'Unknown',
-                    corrige_manuellement INTEGER DEFAULT 0
+                CREATE TABLE IF NOT EXISTS user_mapping (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    personne TEXT UNIQUE NOT NULL,
+                    display_name TEXT,
+                    couleur TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            cur.execute("CREATE INDEX IF NOT EXISTS idx_mois ON transactions(mois)")
-            cur.execute("CREATE INDEX IF NOT EXISTS idx_personne ON transactions(personne)")
 
         conn.commit()
     finally:
@@ -195,7 +197,7 @@ def get_transactions(mois: str = None, personne: str = None) -> list[dict]:
             query += f" AND mois = {p}"
             params.append(mois)
         if personne:
-            query += f" AND personne = {p}"
+            query += f" AND LOWER(personne) = LOWER({p})"
             params.append(personne)
 
         query += " ORDER BY date DESC"

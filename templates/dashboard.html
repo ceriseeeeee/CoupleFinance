@@ -768,6 +768,10 @@ function showPage(name) {
 // ══════════════════════════════════════
 //  FILTRE TRANSACTIONS
 // ══════════════════════════════════════
+function normalizeName(s) {
+  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
 function filterTxn(type, btn) {
   document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
@@ -776,8 +780,8 @@ function filterTxn(type, btn) {
     if (type === 'unknown') show = row.dataset.cat === 'Unknown';
     if (type === 'debit')   show = row.dataset.type === 'debit';
     if (type === 'credit')  show = row.dataset.type === 'credit';
-    if (type === 'cerise')  show = row.dataset.personne === 'cerise';
-    if (type === 'loic')    show = row.dataset.personne === 'loïc';
+    if (type === 'cerise')  show = normalizeName(row.dataset.personne) === 'cerise';
+    if (type === 'loic')    show = normalizeName(row.dataset.personne) === 'loic';
     row.style.display = show ? '' : 'none';
   });
 }
@@ -946,25 +950,27 @@ async function recategorizeAI() {
 }
 
 async function correctDashboard(transactionId, newCategory, selectEl) {
+  selectEl.disabled = true;
   try {
     const res = await fetch('/api/correct', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ transaction_id: transactionId, categorie: newCategory })
     });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data.success) {
       const row = selectEl.closest('tr');
       row.dataset.cat = newCategory;
-      if (newCategory === 'Unknown') {
-        row.classList.add('unknown');
-      } else {
-        row.classList.remove('unknown');
-      }
-      showDashToast('✓ Catégorie mise à jour', 'ok');
+      row.classList.toggle('unknown', newCategory === 'Unknown');
+      showDashToast('✓ ' + newCategory + ' — enregistré', 'ok');
+    } else {
+      showDashToast('Erreur lors de la mise à jour', '');
     }
   } catch(e) {
-    showDashToast('Erreur', '');
+    showDashToast('Erreur réseau — réessayez', '');
+  } finally {
+    selectEl.disabled = false;
   }
 }
 

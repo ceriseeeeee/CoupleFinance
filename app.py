@@ -78,10 +78,10 @@ def upload():
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
 
-        if file.filename.endswith(".csv"):
+        if file.filename.lower().endswith(".csv"):
             from parser_csv import parse_csv
             transactions = parse_csv(filepath, personne)
-        elif file.filename.endswith(".pdf"):
+        elif file.filename.lower().endswith(".pdf"):
             banque = detect_bank(filepath)
             if banque == "bourso":
                 transactions = parse_bourso_pdf(filepath, personne)
@@ -210,6 +210,16 @@ def save_to_db(session_id):
 # ─────────────────────────────────────────────
 #  API — Stats JSON pour le dashboard
 # ─────────────────────────────────────────────
+
+@app.route("/api/dashboard-data")
+def api_dashboard_data():
+    """Retourne stats + transactions filtrées par mois et/ou personne."""
+    mois = request.args.get("mois")
+    personne = request.args.get("personne") or None
+    transactions = get_transactions(mois=mois, personne=personne)
+    stats = get_stats(mois=mois)
+    return jsonify({"transactions": transactions, "stats": stats})
+
 
 @app.route("/api/stats")
 def api_stats():
