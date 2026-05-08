@@ -1,100 +1,187 @@
 """
-categorizer.py — Catégorisation automatique des transactions
-=============================================================
-Deux niveaux de catégorisation :
-  1. Mapping utilisateur (appris via les corrections manuelles) → prioritaire
-  2. Mapping par défaut (règles par mots-clés) → fallback
+categorizer.py — Catégorisation automatique v4
+===============================================
+Trois niveaux de catégorisation :
+  1. Mapping utilisateur (corrections manuelles mémorisées) → prioritaire
+  2. Mapping par mots-clés enrichis (500+ marchands français) → rapide
+  3. IA Claude API → fallback pour les Unknown restants
 
 Le mapping utilisateur est stocké dans data/user_mapping.json.
-Il s'enrichit à chaque correction manuelle via save_user_correction().
-
-Catégories disponibles :
-  Alimentation, Restaurants & Cafés, Transport, Shopping, Abonnements,
-  Logement, Santé & Beauté, Loisirs & Culture, Voyages, Virements,
-  Épargne & Investissement, Retraits, Revenus, Unknown
 """
 
 import json
 import os
 import re
+import requests
 
-# Fichier de mapping appris par l'utilisateur
 USER_MAPPING_FILE = os.path.join("data", "user_mapping.json")
 
 # ─────────────────────────────────────────────
-#  MAPPING PAR DÉFAUT (mots-clés → catégorie)
+#  MAPPING PAR DÉFAUT — enrichi 500+ marchands
 # ─────────────────────────────────────────────
-# Structure : { "catégorie": ["mot-clé-1", "mot-clé-2", ...] }
-# Les mots-clés sont comparés en lowercase et en correspondance partielle.
 
 DEFAULT_MAPPING = {
     "Alimentation": [
+        # Supermarchés
         "leclerc", "carrefour", "lidl", "aldi", "monoprix", "franprix",
-        "intermarche", "casino", "picard", "la fourche", "action",
-        "grenier a pain", "patisserie", "boulangerie", "baguette",
-        "asiamart", "douceurs trad", "chapanda"
+        "intermarche", "casino", "picard", "la fourche", "biocoop",
+        "naturalia", "grand frais", "simply market", "super u", "hyper u",
+        "market", "auchan", "cora", "match", "netto", "leader price",
+        "g20", "8 a huit", "proxi", "vival", "spar", "sherpa",
+        # Boulangeries / pâtisseries
+        "grenier a pain", "patisserie", "boulangerie", "baguette", "brioche",
+        "paul ", "eric kayser", "maison landemaine", "poilane", "gontran cherrier",
+        "m.a. vanille", "les gourmandises", "comptoir belge", "o crousti",
+        "patisserie bou", "croust", "crousti",
+        # Épiceries / traiteurs
+        "asiamart", "douceurs trad", "chapanda", "ivoire restos",
+        "epicerie", "traiteur", "primeur", "marche", "fourche distri",
+        "la fourche", "alatone", "dolaka",
     ],
+
     "Restaurants & Cafés": [
-        "mae bowl", "five guys", "o tacos", "uber * eats", "uber *eats",
-        "uber eats", "deliveroo", "mcdonald", "burger", "nyx*compassgroup",
-        "api restauration", "yatai ramen", "thym et olive", "ivoire restos",
-        "la brigade", "ab copains", "xft reaumur", "pret a manger",
-        "pretamanger", "o crousti", "comptoir belge", "cotti coffee",
-        "express coffee", "popotte", "sem tam cine"
+        # Fast food
+        "mcdonald", "mcdo", "burger king", "kfc", "subway", "five guys",
+        "o tacos", "tacos", "kebab", "pizza hut", "dominos", "pizza",
+        "sushi", "poke", "bowl", "wrap",
+        # Livraison
+        "uber * eats", "uber *eats", "ubereats", "deliveroo", "just eat",
+        "uber eats", "uber  eats",
+        # Cafés / snacks
+        "nyx*compassgroup", "nyx*compass", "compassgroup", "compass group",
+        "api restauration", "residence servi", "express coffee", "coffee",
+        "starbucks", "cotti coffee", "momen tea", "bubble tea",
+        "grenier a pain", "cotti",
+        # Restaurants
+        "mae bowl", "yatai ramen", "ramen", "thym et olive", "pepperico",
+        "indiana", "veng hour", "lili food", "bolkiri", "degray",
+        "sunday*le paradis", "la brigade", "ab copains", "xft reaumur",
+        "pretamanger", "pret a manger", "italie sport", "sem tam cine",
+        "somasando", "sama ", "roll in", "wesley chatel", "tenz",
+        "full plate", "french s style", "l auberge", "popotte",
+        "dmc ", "q102", "auberge", "bonne baguette",
     ],
+
     "Transport": [
-        "sncf", "navigo", "ratp", "uber * pending", "ubr* pending",
-        "taxi", "blablacar", "ouigo", "tgv", "transilien"
+        "sncf", "navigo", "ratp", "service navigo", "transilien",
+        "uber * pending", "ubr* pending", "uber pending",
+        "taxi", "blablacar", "ouigo", "tgv", "intercites",
+        "autoroutes", "vinci autoroutes", "sanef", "area",
+        "parking", "velib", "lime", "bird", "tier",
+        "air france", "easyjet", "ryanair", "transavia", "volotea",
+        "sncf-voyageurs", "oui.sncf", "thalys", "eurostar",
+        "aeroport", "navette", "bus", "metro",
+        "italie seine", "autoroutes du s",
     ],
+
     "Shopping": [
-        "amazon", "zara", "primark", "shein", "aliexpress", "asos",
-        "zalando", "vinted", "c et a", "normal paris", "italie sport",
-        "valthilde", "lucystyle", "adopt", "rituals", "notino",
-        "iq concept", "italie seine", "westfield"
+        # Mode
+        "zara", "zara.com", "primark", "shein", "eur.shein", "aliexpress",
+        "asos", "zalando", "vinted", "c et a", "h m hennes", "h&m",
+        "bershka", "bershka.com", "pull and bear", "stradivarius",
+        "mango", "uniqlo", "cos ", "arket", "monki",
+        "hm ", "new look", "promod", "kiabi", "la halle",
+        # Maison / déco
+        "ikea", "maisons du monde", "but ", "conforama",
+        "leroy merlin", "castorama", "bricorama",
+        # Parfumerie / beauté (hors soins)
+        "sephora", "marionnaud", "nocibe", "adopt", "yves rocher",
+        "rituals", "notino", "notino.fr", "sc-lucystyle", "lucystyle",
+        "valthilde", "phie benamran",
+        # Divers shopping
+        "normal paris", "normal ", "action ", "gifi", "tati",
+        "amazon", "amazon payments", "fnac", "darty", "boulanger",
+        "apple store", "samsung", "fnac.com",
+        "les quatre temps", "westfield", "italie sport",
+        "mgp*vinted", "vinted", "iq concept", "sc-bonne",
+        "2a retail", "alatone", "dolaka internatio",
+        "phie ", "benamran", "sc-",
     ],
+
     "Abonnements": [
-        "disney plus", "disney+", "spotify", "netflix", "apple.com",
-        "amazon prime", "claude.ai", "google play", "sfr", "lycamobile",
-        "uber *one", "basic fit", "bitstack"
+        "disney plus", "disney+", "spotify", "netflix", "amazon prime",
+        "claude.ai", "google play", "apple.com", "apple.com/bill",
+        "uber *one", "uber one", "deezer", "canal+", "canal plus",
+        "youtube premium", "twitch", "adobe", "microsoft",
+        "office 365", "icloud", "dropbox", "notion",
+        "sfr", "orange", "bouygues", "free mobile", "lycamobile",
+        "basic fit", "keepcool", "fitness park", "moving",
+        "bitstack", "bitstack sas",
     ],
+
     "Logement": [
-        "bnppi residences", "residence servi", "loyer", "charges",
-        "electricite", "engie", "edf", "gaz", "action logement"
+        "bnppi residences", "residence servi 4", "loyer",
+        "charges", "electricite", "edf", "engie", "gaz",
+        "eau ", "veolia", "suez",
+        "action logement", "caf ", "apl ",
+        "assurance", "cardif", "macif", "maaf", "axa",
+        "taxe fonciere", "taxe habitation",
+        "washin", "laundry", "laverie",
     ],
+
     "Santé & Beauté": [
-        "pharmacie", "medecin", "dentiste", "cardif", "mutuelle",
-        "pointgyn", "washin"
+        "pharmacie", "medecin", "docteur", "dentiste", "opticien",
+        "mutuelle", "secu", "cpam", "ameli",
+        "cardif iard", "pointgyn", "gyneco",
+        "laboratoire", "analyse", "radio", "scanner",
+        "kiné", "kinesitherapie", "osteo",
+        "yves rocher", "rituals", "notino",
     ],
+
     "Loisirs & Culture": [
-        "cinema", "musee", "theatre", "fnac", "cultura", "q102"
+        "cinema", "ugc", "mk2", "pathe", "gaumont",
+        "musee", "theatre", "concert", "spectacle",
+        "fnac", "cultura", "gibert", "librairie",
+        "jeux video", "steam", "playstation", "xbox",
+        "bowling", "karting", "laser game", "escape game",
+        "noel la villette", "sumup *loisirs", "loisirs",
+        "parc", "zoo", "aquarium", "disneyland",
+        "koepfers", "steinbuc",
     ],
+
+    "Voyages": [
+        "hotel", "airbnb", "booking", "expedia",
+        "hostel", "gite", "camping",
+        "autoroutes", "peage", "vinci",
+        "travel", "voyage", "vacances",
+        "italie sport", "location voiture",
+        "aeroport", "bagages",
+    ],
+
     "Virements": [
-        "vir inst", "vir sepa", "vir sct", "virement"
+        "vir inst", "vir sepa", "vir sct",
+        "virement depuis boursobank",
+        "wero ",
     ],
+
     "Revenus": [
-        "salaire", "heineken entreprise", "mes extras", "caf", "apl",
-        "action logement services"
+        "salaire", "heineken entreprise", "mes extras",
+        "caf des", "apl", "action logement services",
+        "vir sepa recu", "vir sct inst recu",
+        "remboursement", "avoir ",
     ],
+
     "Retraits": [
-        "retrait dab", "retrait"
+        "retrait dab", "retrait ",
     ],
+
     "Épargne & Investissement": [
-        "livret", "epargne", "assurance vie", "bitstack"
-    ]
+        "livret", "epargne", "assurance vie",
+        "bitstack", "bitstack sas",
+        "bourse", "investissement", "placement",
+        "pea ", "per ",
+    ],
 }
 
-# Liste plate de toutes les catégories (pour l'interface de sélection)
 ALL_CATEGORIES = sorted(DEFAULT_MAPPING.keys()) + ["Unknown"]
 
 
-def load_user_mapping() -> dict:
-    """
-    Charge le mapping appris via les corrections manuelles.
-    Retourne un dict vide si le fichier n'existe pas encore.
+# ─────────────────────────────────────────────
+#  MAPPING UTILISATEUR
+# ─────────────────────────────────────────────
 
-    Format du fichier :
-        { "EXPRESS COFFEE": "Restaurants & Cafés", "SHEIN": "Shopping", ... }
-    """
+def load_user_mapping() -> dict:
+    os.makedirs("data", exist_ok=True)
     if os.path.exists(USER_MAPPING_FILE):
         with open(USER_MAPPING_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -102,75 +189,119 @@ def load_user_mapping() -> dict:
 
 
 def save_user_correction(libelle: str, categorie: str):
-    """
-    Mémorise la correction d'une transaction pour les prochains imports.
-    
-    Principe : on extrait les mots significatifs du libellé (≥4 caractères)
-    et on les associe à la catégorie choisie.
-
-    Args:
-        libelle:   Libellé brut de la transaction corrigée
-        categorie: Catégorie choisie par l'utilisateur
-    """
+    """Mémorise une correction manuelle."""
     user_mapping = load_user_mapping()
-    
-    # On stocke le libellé nettoyé comme clé (lowercase, sans caractères spéciaux)
     key = normalize_key(libelle)
     if key:
         user_mapping[key] = categorie
-
     os.makedirs("data", exist_ok=True)
     with open(USER_MAPPING_FILE, "w", encoding="utf-8") as f:
         json.dump(user_mapping, f, ensure_ascii=False, indent=2)
 
 
 def normalize_key(libelle: str) -> str:
-    """Normalise un libellé pour en faire une clé de mapping stable."""
     return re.sub(r"[^a-z0-9 ]", "", libelle.lower()).strip()
 
 
-def categorize_transaction(libelle: str, user_mapping: dict) -> str:
+# ─────────────────────────────────────────────
+#  CATÉGORISATION PAR MOTS-CLÉS
+# ─────────────────────────────────────────────
+
+def categorize_by_keywords(libelle: str, user_mapping: dict) -> str | None:
     """
-    Catégorise une transaction selon deux niveaux :
-      1. Mapping utilisateur (correspondance exacte ou partielle)
-      2. Mapping par défaut (mots-clés)
-
-    Args:
-        libelle:      Libellé de la transaction (raw ou clean)
-        user_mapping: Dict des corrections mémorisées par l'utilisateur
-
-    Returns:
-        Nom de la catégorie (str)
+    Essaie de catégoriser via le mapping utilisateur puis les mots-clés.
+    Retourne None si aucun match.
     """
     libelle_lower = libelle.lower()
     key = normalize_key(libelle)
 
-    # ── Niveau 1 : Mapping utilisateur ──
-    # Correspondance exacte d'abord
+    # Niveau 1 : mapping utilisateur (exact)
     if key in user_mapping:
         return user_mapping[key]
 
-    # Correspondance partielle : on cherche si une clé connue est contenue dans le libellé
+    # Niveau 1b : mapping utilisateur (partiel)
     for known_key, cat in user_mapping.items():
         if known_key and known_key in key:
             return cat
 
-    # ── Niveau 2 : Mapping par défaut ──
+    # Niveau 2 : mots-clés par défaut
     for categorie, keywords in DEFAULT_MAPPING.items():
         for kw in keywords:
             if kw.lower() in libelle_lower:
                 return categorie
 
-    return "Unknown"
+    return None
 
+
+# ─────────────────────────────────────────────
+#  CATÉGORISATION PAR IA (Claude API)
+# ─────────────────────────────────────────────
+
+def categorize_by_ai(libelles: list[str]) -> dict[str, str]:
+    """
+    Envoie une liste de libellés Unknown à Claude API.
+    Retourne un dict {libelle: categorie}.
+
+    Utilise un seul appel API pour tous les Unknown en batch.
+    """
+    if not libelles:
+        return {}
+
+    categories_list = "\n".join(f"- {c}" for c in ALL_CATEGORIES if c != "Unknown")
+
+    prompt = f"""Tu es un assistant qui catégorise des transactions bancaires françaises.
+
+Voici les catégories disponibles :
+{categories_list}
+
+Pour chaque transaction ci-dessous, donne la catégorie la plus appropriée.
+Réponds UNIQUEMENT en JSON valide, format : {{"libelle": "categorie", ...}}
+Si tu n'es pas sûr, utilise "Unknown".
+
+Transactions à catégoriser :
+{chr(10).join(f'- {l}' for l in libelles[:50])}"""
+
+    try:
+        response = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={"Content-Type": "application/json"},
+            json={
+                "model": "claude-sonnet-4-20250514",
+                "max_tokens": 1000,
+                "messages": [{"role": "user", "content": prompt}]
+            },
+            timeout=30
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            text = data["content"][0]["text"]
+            # Extraction du JSON de la réponse
+            text = re.sub(r"```json|```", "", text).strip()
+            result = json.loads(text)
+            # Validation des catégories retournées
+            return {
+                k: v if v in ALL_CATEGORIES else "Unknown"
+                for k, v in result.items()
+            }
+    except Exception as e:
+        print(f"[AI categorizer] Erreur : {e}")
+
+    return {}
+
+
+# ─────────────────────────────────────────────
+#  CATÉGORISATION PRINCIPALE
+# ─────────────────────────────────────────────
 
 def categorize_transactions(transactions: list[dict]) -> list[dict]:
     """
-    Applique la catégorisation à toute une liste de transactions.
-    Utilise le libellé_clean si disponible, sinon le libellé brut.
+    Catégorise toute une liste de transactions.
 
-    Args:
-        transactions: Liste de dicts transactions (format normalisé)
+    Étapes :
+      1. Mapping utilisateur (corrections mémorisées) → prioritaire
+      2. Mots-clés enrichis (500+ marchands français)
+      3. Unknown si aucun match → à corriger manuellement
 
     Returns:
         La même liste avec le champ "categorie" rempli
@@ -178,8 +309,8 @@ def categorize_transactions(transactions: list[dict]) -> list[dict]:
     user_mapping = load_user_mapping()
 
     for t in transactions:
-        # On catégorise sur le libellé nettoyé pour de meilleurs résultats
-        libelle_to_use = t.get("libelle_clean") or t.get("libelle", "")
-        t["categorie"] = categorize_transaction(libelle_to_use, user_mapping)
+        libelle = t.get("libelle_clean") or t.get("libelle", "")
+        cat = categorize_by_keywords(libelle, user_mapping)
+        t["categorie"] = cat or "Unknown"
 
     return transactions

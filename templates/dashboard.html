@@ -315,6 +315,10 @@
     .neg { color: var(--red); font-weight: 600; }
     .pos { color: var(--green); font-weight: 600; }
 
+    .btn-ai { margin-top: 8px; padding: 5px 10px; background: linear-gradient(135deg, #2ECC9A, #60A5FA); color: white; border: none; border-radius: 6px; font-size: .75rem; font-weight: 600; cursor: pointer; width: 100%; transition: opacity .2s; }
+    .btn-ai:hover { opacity: .85; }
+    .btn-ai:disabled { opacity: .5; cursor: not-allowed; }
+
     .cat-select-inline {
       padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px;
       background: var(--bg); color: var(--text);
@@ -522,6 +526,11 @@
         <div class="kpi-label">Nbre de transactions</div>
         <div class="kpi-val" style="color:var(--blue)">{{ stats.get('nb_transactions', 0) }}</div>
         <div class="kpi-sub {{ 'down' if stats.get('nb_unknown', 0) > 0 else '' }}">{{ stats.get('nb_unknown', 0) }} inconnues</div>
+        {% if stats.get('nb_unknown', 0) > 0 %}
+        <button onclick="recategorizeAI()" class="btn-ai" id="btn-ai">
+          ✦ Catégoriser avec l'IA
+        </button>
+        {% endif %}
       </div>
     </div>
 
@@ -903,7 +912,31 @@ function toggleBudgetPerson(p, btn) {
 <div id="dash-toast"></div>
 
 <script>
-async function correctDashboard(transactionId, newCategory, selectEl) {
+async function recategorizeAI() {
+  const btn = document.getElementById('btn-ai');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ IA en cours…';
+
+  try {
+    const res = await fetch('/api/recategorize-ai', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showDashToast(`✦ ${data.updated} transactions catégorisées par l'IA !`, 'ok');
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showDashToast('Erreur IA', '');
+      btn.disabled = false;
+      btn.textContent = '✦ Catégoriser avec l\'IA';
+    }
+  } catch(e) {
+    showDashToast('Erreur réseau', '');
+    btn.disabled = false;
+    btn.textContent = '✦ Catégoriser avec l\'IA';
+  }
+}
+
+transactionId, newCategory, selectEl) {
   try {
     const res = await fetch('/api/correct', {
       method: 'POST',
