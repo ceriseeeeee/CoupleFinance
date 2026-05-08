@@ -208,21 +208,70 @@ DEFAULT_MAPPING = {
 # ─────────────────────────────────────────────
 
 def load_user_mapping() -> dict:
-    os.makedirs("data", exist_ok=True)
-    if os.path.exists(USER_MAPPING_FILE):
-        with open(USER_MAPPING_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+    """Charge le mapping depuis Supabase ou fichier local."""
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
+        try:
+            import psycopg2
+            conn = psycopg2.connect(database_url)
+            cur = conn.cursor()
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS user_mapping (
+                    libelle_key TEXT PRIMARY KEY,
+                    categorie TEXT NOT NULL
+                )
+            """)
+            conn.commit()
+            cur.execute("SELECT libelle_key, categorie FROM user_mapping")
+            rows = cur.fetchall()
+            conn.close()
+            return {r[0]: r[1] for r in rows}
+        except Exception as e:
+            print(f"[user_mapping] Erreur: {e}")
+            return {}
+    else:
+        os.makedirs("data", exist_ok=True)
+        if os.path.exists(USER_MAPPING_FILE):
+            with open(USER_MAPPING_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return {}
 
 
 def save_user_correction(libelle: str, categorie: str):
-    user_mapping = load_user_mapping()
+    """Sauvegarde une correction de façon persistante (Supabase ou local)."""
     key = normalize_key(libelle)
-    if key:
-        user_mapping[key] = categorie
-    os.makedirs("data", exist_ok=True)
-    with open(USER_MAPPING_FILE, "w", encoding="utf-8") as f:
-        json.dump(user_mapping, f, ensure_ascii=False, indent=2)
+    if not key:
+        return
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
+        try:
+            import psycopg2
+            conn = psycopg2.connect(database_url)
+            cur = conn.cursor()
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS user_mapping (
+                    libelle_key TEXT PRIMARY KEY,
+                    categorie TEXT NOT NULL
+                )
+            """)
+            cur.execute("""
+                INSERT INTO user_mapping (libelle_key, categorie)
+                VALUES (%s, %s)
+                ON CONFLICT (libelle_key) DO UPDATE SET categorie = EXCLUDED.categorie
+            """, (key, categorie))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"[user_mapping] Erreur sauvegarde: {e}")
+    else:
+        os.makedirs("data", exist_ok=True)
+        mapping = {}
+        if os.path.exists(USER_MAPPING_FILE):
+            with open(USER_MAPPING_FILE, "r", encoding="utf-8") as f:
+                mapping = json.load(f)
+        mapping[key] = categorie
+        with open(USER_MAPPING_FILE, "w", encoding="utf-8") as f:
+            json.dump(mapping, f, ensure_ascii=False, indent=2)
 
 
 def normalize_key(libelle: str) -> str:
