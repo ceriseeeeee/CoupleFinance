@@ -271,7 +271,7 @@
     }
 
     function handleFiles(files) {
-      selectedFiles = Array.from(files).filter(f => f.name.endsWith('.pdf'));
+      selectedFiles = Array.from(files).filter(f => f.name.endsWith('.pdf') || f.name.endsWith('.csv'));
       renderFiles();
       updateSubmit();
     }
