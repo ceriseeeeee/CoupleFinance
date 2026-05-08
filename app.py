@@ -225,48 +225,5 @@ def api_transactions():
     return jsonify(transactions)
 
 
-# ─────────────────────────────────────────────
-#  API — Recatégorisation IA des Unknown
-# ─────────────────────────────────────────────
-
-@app.route("/api/recategorize-ai", methods=["POST"])
-def recategorize_ai():
-    """
-    Récupère tous les Unknown en base et les envoie à Claude API.
-    Met à jour la base avec les nouvelles catégories.
-    """
-    from categorizer import categorize_by_ai, save_user_correction
-
-    # Récupère tous les Unknown
-    unknowns = get_transactions()
-    unknowns = [t for t in unknowns if t["categorie"] == "Unknown"]
-
-    if not unknowns:
-        return jsonify({"success": True, "updated": 0, "message": "Aucun Unknown à traiter"})
-
-    # Déduplique les libellés
-    libelles_uniques = list({
-        t.get("libelle_clean") or t.get("libelle", "") for t in unknowns
-    })
-
-    # Appel IA
-    ai_results = categorize_by_ai(libelles_uniques)
-
-    # Mise à jour en base
-    updated = 0
-    for t in unknowns:
-        libelle = t.get("libelle_clean") or t.get("libelle", "")
-        if libelle in ai_results and ai_results[libelle] != "Unknown":
-            update_categorie(t["id"], ai_results[libelle])
-            save_user_correction(libelle, ai_results[libelle])
-            updated += 1
-
-    return jsonify({
-        "success": True,
-        "updated": updated,
-        "total_unknown": len(unknowns)
-    })
-
-
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

@@ -12,7 +12,7 @@ Le mapping utilisateur est stocké dans data/user_mapping.json.
 import json
 import os
 import re
-import requests
+
 
 USER_MAPPING_FILE = os.path.join("data", "user_mapping.json")
 
@@ -231,63 +231,6 @@ def categorize_by_keywords(libelle: str, user_mapping: dict) -> str | None:
                 return categorie
 
     return None
-
-
-# ─────────────────────────────────────────────
-#  CATÉGORISATION PAR IA (Claude API)
-# ─────────────────────────────────────────────
-
-def categorize_by_ai(libelles: list[str]) -> dict[str, str]:
-    """
-    Envoie une liste de libellés Unknown à Claude API.
-    Retourne un dict {libelle: categorie}.
-
-    Utilise un seul appel API pour tous les Unknown en batch.
-    """
-    if not libelles:
-        return {}
-
-    categories_list = "\n".join(f"- {c}" for c in ALL_CATEGORIES if c != "Unknown")
-
-    prompt = f"""Tu es un assistant qui catégorise des transactions bancaires françaises.
-
-Voici les catégories disponibles :
-{categories_list}
-
-Pour chaque transaction ci-dessous, donne la catégorie la plus appropriée.
-Réponds UNIQUEMENT en JSON valide, format : {{"libelle": "categorie", ...}}
-Si tu n'es pas sûr, utilise "Unknown".
-
-Transactions à catégoriser :
-{chr(10).join(f'- {l}' for l in libelles[:50])}"""
-
-    try:
-        response = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={"Content-Type": "application/json"},
-            json={
-                "model": "claude-sonnet-4-20250514",
-                "max_tokens": 1000,
-                "messages": [{"role": "user", "content": prompt}]
-            },
-            timeout=30
-        )
-
-        if response.status_code == 200:
-            data = response.json()
-            text = data["content"][0]["text"]
-            # Extraction du JSON de la réponse
-            text = re.sub(r"```json|```", "", text).strip()
-            result = json.loads(text)
-            # Validation des catégories retournées
-            return {
-                k: v if v in ALL_CATEGORIES else "Unknown"
-                for k, v in result.items()
-            }
-    except Exception as e:
-        print(f"[AI categorizer] Erreur : {e}")
-
-    return {}
 
 
 # ─────────────────────────────────────────────
