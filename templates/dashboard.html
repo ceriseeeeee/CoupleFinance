@@ -945,7 +945,7 @@ async function recategorizeAI() {
   }
 }
 
-transactionId, newCategory, selectEl) {
+async function correctDashboard(transactionId, newCategory, selectEl) {
   try {
     const res = await fetch('/api/correct', {
       method: 'POST',
