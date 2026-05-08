@@ -119,7 +119,7 @@ def detect_bank(filepath: str) -> str:
             text = pdf.pages[0].extract_text() or ""
             if "BoursoBank" in text or "Boursorama" in text:
                 return "bourso"
-            elif "BNP PARIBAS" in text or "RELEVE DE COMPTE" in text:
+            elif "BNP PARIBAS" in text or "RELEVE DE COMPTE" in text or "RELEVEDECOMPTE" in text or "BNPAFRPPXXX" in text:
                 return "bnp"
     except Exception:
         pass
