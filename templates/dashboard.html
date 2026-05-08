@@ -526,11 +526,6 @@
         <div class="kpi-label">Nbre de transactions</div>
         <div class="kpi-val" style="color:var(--blue)">{{ stats.get('nb_transactions', 0) }}</div>
         <div class="kpi-sub {{ 'down' if stats.get('nb_unknown', 0) > 0 else '' }}">{{ stats.get('nb_unknown', 0) }} inconnues</div>
-        {% if stats.get('nb_unknown', 0) > 0 %}
-        <button onclick="recategorizeAI()" class="btn-ai" id="btn-ai">
-          ✦ Catégoriser avec l'IA
-        </button>
-        {% endif %}
       </div>
     </div>
 
@@ -611,9 +606,10 @@
             <td style="font-weight:500">{{ t.libelle_clean or t.libelle }}</td>
             <td>
               <select class="cat-select-inline" onchange="correctDashboard('{{ t.id }}', this.value, this)">
-                {% set cats = ['Alimentation','Restaurants & Cafés','Transport','Shopping',
-                  'Abonnements','Logement','Santé & Beauté','Loisirs & Culture',
-                  'Voyages','Virements','Revenus','Épargne & Investissement','Retraits','Unknown'] %}
+                {% set cats = ['Loyer','Appartement','Abonnements','Électricité','Transport',
+                  'Shopping','Courses & Alimentation','Eating out','Santé',
+                  'Divertissements & Loisirs','Épargne','Bénin Voyage',
+                  'Voyage Couple','Revenus','Virements','Unknown'] %}
                 {% for cat in cats %}
                 <option value="{{ cat }}" {{ 'selected' if t.categorie == cat }}>{{ cat }}</option>
                 {% endfor %}
@@ -652,9 +648,19 @@
           <span style="text-align:right">%</span>
         </div>
         {% set budget_prevu = {
-          'Loyer': 1033, 'Épargne Livret A': 400, 'Courses': 300,
-          'Sorties': 245, 'Argent perso Cerise': 200, 'Argent perso Loïc': 200,
-          'Investissements': 200, 'Abonnements': 126, 'Electricité': 100
+          'Loyer': 1075,
+          'Appartement': 70,
+          'Abonnements': 181,
+          'Électricité': 100,
+          'Transport': 50,
+          'Shopping': 200,
+          'Courses & Alimentation': 300,
+          'Eating out': 245,
+          'Santé': 25,
+          'Divertissements & Loisirs': 50,
+          'Épargne': 400,
+          'Bénin Voyage': 200,
+          'Voyage Couple': 200
         } %}
         {% for cat, prevu in budget_prevu.items() %}
         {% set realise = stats.get('par_categorie', {}).get(cat, 0) %}
@@ -851,13 +857,16 @@ const PALETTE = ['#2ECC9A','#60A5FA','#F87171','#F59E0B','#A78BFA','#34D399','#F
 (function() {
   const el = document.getElementById('chartBudget');
   if (!el) return;
-  const budgets = { 'Loyer': 1033, 'Épargne': 400, 'Courses': 300, 'Sorties': 245, 'Perso': 200, 'Abonnements': 126, 'Électricité': 100 };
+  const budgets = {
+    'Loyer': 1075, 'Appartement': 70, 'Abonnements': 181,
+    'Électricité': 100, 'Transport': 50, 'Shopping': 200,
+    'Courses & Alimentation': 300, 'Eating out': 245,
+    'Santé': 25, 'Divertissements & Loisirs': 50,
+    'Épargne': 400, 'Bénin Voyage': 200, 'Voyage Couple': 200
+  };
   const labels = Object.keys(budgets);
   const prevus = Object.values(budgets);
-  const realises = labels.map(l => {
-    const key = Object.keys(STATS.par_categorie || {}).find(k => k.toLowerCase().includes(l.toLowerCase()));
-    return key ? STATS.par_categorie[key] : 0;
-  });
+  const realises = labels.map(l => (STATS.par_categorie || {})[l] || 0);
   new Chart(el, {
     type: 'bar',
     data: {

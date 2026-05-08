@@ -228,9 +228,10 @@
             <td>{{ t.personne }}</td>
             <td>
               <select class="cat-select" onchange="correctCategory('{{ t.id }}', this.value, this)">
-                {% set cats = ['Alimentation','Restaurants & Cafés','Transport','Shopping',
-                  'Abonnements','Logement','Santé & Beauté','Loisirs & Culture',
-                  'Voyages','Virements','Revenus','Épargne & Investissement','Retraits','Unknown'] %}
+                {% set cats = ['Loyer','Appartement','Abonnements','Électricité','Transport',
+                  'Shopping','Courses & Alimentation','Eating out','Santé',
+                  'Divertissements & Loisirs','Épargne','Bénin Voyage',
+                  'Voyage Couple','Revenus','Virements','Unknown'] %}
                 {% for cat in cats %}
                 <option value="{{ cat }}" {{ 'selected' if t.categorie == cat }}>{{ cat }}</option>
                 {% endfor %}
