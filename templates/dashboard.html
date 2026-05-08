@@ -315,6 +315,25 @@
     .neg { color: var(--red); font-weight: 600; }
     .pos { color: var(--green); font-weight: 600; }
 
+    .cat-select-inline {
+      padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg); color: var(--text);
+      font-family: 'Nunito', sans-serif; font-size: .78rem; cursor: pointer;
+      min-width: 160px; outline: none; transition: border-color .2s;
+    }
+    .cat-select-inline:focus { border-color: var(--green); background: var(--white); }
+
+    #dash-toast {
+      position: fixed; bottom: 2rem; right: 2rem;
+      background: var(--dark); color: #fff;
+      padding: 10px 18px; border-radius: var(--radius-sm);
+      font-size: .85rem; opacity: 0; transform: translateY(8px);
+      transition: all .3s; pointer-events: none; z-index: 999;
+    }
+    #dash-toast.show { opacity: 1; transform: translateY(0); }
+    #dash-toast.ok { background: var(--green-dim); }
+    .pos { color: var(--green); font-weight: 600; }
+
     /* ══════════════════════════════════════
        BUDGET PAGE — barres horizontales
     ══════════════════════════════════════ */
@@ -577,10 +596,20 @@
           <tr class="{{ 'unknown' if t.categorie == 'Unknown' else '' }}"
               data-type="{{ t.type }}"
               data-cat="{{ t.categorie }}"
-              data-personne="{{ t.personne|lower }}">
+              data-personne="{{ t.personne|lower }}"
+              data-id="{{ t.id }}">
             <td style="color:var(--muted)">{{ t.date }}</td>
             <td style="font-weight:500">{{ t.libelle_clean or t.libelle }}</td>
-            <td><span class="cat-badge {{ t.categorie|lower|replace(' ', '')|replace('&', '') }}">{{ t.categorie }}</span></td>
+            <td>
+              <select class="cat-select-inline" onchange="correctDashboard('{{ t.id }}', this.value, this)">
+                {% set cats = ['Alimentation','Restaurants & Cafés','Transport','Shopping',
+                  'Abonnements','Logement','Santé & Beauté','Loisirs & Culture',
+                  'Voyages','Virements','Revenus','Épargne & Investissement','Retraits','Unknown'] %}
+                {% for cat in cats %}
+                <option value="{{ cat }}" {{ 'selected' if t.categorie == cat }}>{{ cat }}</option>
+                {% endfor %}
+              </select>
+            </td>
             <td>{{ t.personne }}</td>
             <td style="color:var(--muted);font-size:.78rem">{{ t.banque }}</td>
             <td class="{{ 'neg' if t.type == 'debit' else 'pos' }}" style="text-align:right">
@@ -871,5 +900,39 @@ function toggleBudgetPerson(p, btn) {
   btn.classList.add('on');
 }
 </script>
+<div id="dash-toast"></div>
+
+<script>
+async function correctDashboard(transactionId, newCategory, selectEl) {
+  try {
+    const res = await fetch('/api/correct', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transaction_id: transactionId, categorie: newCategory })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const row = selectEl.closest('tr');
+      row.dataset.cat = newCategory;
+      if (newCategory === 'Unknown') {
+        row.classList.add('unknown');
+      } else {
+        row.classList.remove('unknown');
+      }
+      showDashToast('✓ Catégorie mise à jour', 'ok');
+    }
+  } catch(e) {
+    showDashToast('Erreur', '');
+  }
+}
+
+function showDashToast(msg, type) {
+  const t = document.getElementById('dash-toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  setTimeout(() => t.className = '', 2000);
+}
+</script>
+
 </body>
 </html>
