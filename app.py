@@ -60,7 +60,7 @@ def import_page():
 
 
 # ─────────────────────────────────────────────
-#  UPLOAD & TRAITEMENT PDF
+#  UPLOAD & TRAITEMENT PDF + CSV
 # ─────────────────────────────────────────────
 
 @app.route("/upload", methods=["POST"])
@@ -74,18 +74,22 @@ def upload():
     all_transactions = []
 
     for file in files:
-        if not file.filename.endswith(".pdf"):
-            continue
-
         filename = f"{uuid.uuid4()}_{file.filename}"
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
 
-        banque = detect_bank(filepath)
-        if banque == "bourso":
-            transactions = parse_bourso_pdf(filepath, personne)
-        elif banque == "bnp":
-            transactions = parse_bnp_pdf(filepath, personne)
+        if file.filename.endswith(".csv"):
+            from parser_csv import parse_csv
+            transactions = parse_csv(filepath, personne)
+        elif file.filename.endswith(".pdf"):
+            banque = detect_bank(filepath)
+            if banque == "bourso":
+                transactions = parse_bourso_pdf(filepath, personne)
+            elif banque == "bnp":
+                transactions = parse_bnp_pdf(filepath, personne)
+            else:
+                os.remove(filepath)
+                continue
         else:
             os.remove(filepath)
             continue
