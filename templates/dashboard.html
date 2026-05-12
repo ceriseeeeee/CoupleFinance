@@ -493,14 +493,14 @@
         <p>Let's see what's going on... voici votre résumé financier</p>
       </div>
       <div class="hero-right">
-        <div class="hero-month">
-          <select id="mois-select" onchange="applyFilters()">
+        <div class="hero-filters">
+          <select id="mois-select" class="hero-select" onchange="applyFilters()">
             {% for m in mois_dispo %}
             <option value="{{ m }}" {{ 'selected' if m == mois_selectionne }}>{{ m }}</option>
             {% endfor %}
             <option value="">Tous les mois</option>
           </select>
-          <select id="personne-select" onchange="applyFilters()">
+          <select id="personne-select" class="hero-select" onchange="applyFilters()">
             <option value="" {{ 'selected' if not personne_filtre }}>Tous</option>
             <option value="Cerise" {{ 'selected' if personne_filtre == 'Cerise' }}>Cerise</option>
             <option value="Loïc" {{ 'selected' if personne_filtre == 'Loïc' }}>Loïc</option>
