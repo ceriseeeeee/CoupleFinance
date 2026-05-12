@@ -245,6 +245,28 @@ def api_transactions():
     return jsonify(transactions)
 
 
+@app.route("/api/export-csv")
+def export_csv():
+    import csv, io
+    from database import get_transactions
+    transactions = get_transactions()
+    output = io.StringIO()
+    if transactions:
+        writer = csv.DictWriter(output, fieldnames=transactions[0].keys(), delimiter=";", extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(transactions)
+    output.seek(0)
+    from datetime import datetime
+    from flask import send_file
+    filename = f"couplefinance_{datetime.now().strftime('%Y%m')}.csv"
+    return send_file(
+        io.BytesIO(output.getvalue().encode("utf-8-sig")),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name=filename
+    )
+
+
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
