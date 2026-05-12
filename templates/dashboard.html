@@ -165,7 +165,7 @@
 
     .hero-illo { font-size: 3.5rem; line-height: 1; }
 
-    .hero-month select {
+    .hero-month select, .hero-select {
       background: rgba(255,255,255,.08);
       border: 1px solid rgba(255,255,255,.15);
       color: #fff;
@@ -175,6 +175,12 @@
       font-size: .82rem;
       cursor: pointer;
       outline: none;
+    }
+
+    .hero-filters {
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
 
     /* ══════════════════════════════════════
@@ -583,6 +589,19 @@
         <h1>Transactions</h1>
         <p>Toutes vos opérations bancaires</p>
       </div>
+      <div class="hero-filters">
+        <select id="mois-select-txn" class="hero-select" onchange="applyFilters()">
+          {% for m in mois_dispo %}
+          <option value="{{ m }}" {{ 'selected' if m == mois_selectionne }}>{{ m }}</option>
+          {% endfor %}
+          <option value="" {{ 'selected' if not mois_selectionne }}>Tous les mois</option>
+        </select>
+        <select id="personne-select-txn" class="hero-select" onchange="applyFilters()">
+          <option value="" {{ 'selected' if not personne_filtre }}>Tous</option>
+          <option value="Cerise" {{ 'selected' if personne_filtre == "Cerise" }}>Cerise</option>
+          <option value="Loïc" {{ 'selected' if personne_filtre == "Loïc" }}>Loïc</option>
+        </select>
+      </div>
       <div class="hero-illo">🌊</div>
     </div>
 
@@ -638,6 +657,19 @@
       <div class="hero-text">
         <h1>Budget</h1>
         <p>Suivi prévu vs réalisé · {{ mois_selectionne or 'tous les mois' }}</p>
+      </div>
+      <div class="hero-filters">
+        <select id="mois-select-bud" class="hero-select" onchange="applyFilters()">
+          {% for m in mois_dispo %}
+          <option value="{{ m }}" {{ 'selected' if m == mois_selectionne }}>{{ m }}</option>
+          {% endfor %}
+          <option value="" {{ 'selected' if not mois_selectionne }}>Tous les mois</option>
+        </select>
+        <select id="personne-select-bud" class="hero-select" onchange="applyFilters()">
+          <option value="" {{ 'selected' if not personne_filtre }}>Tous</option>
+          <option value="Cerise" {{ 'selected' if personne_filtre == "Cerise" }}>Cerise</option>
+          <option value="Loïc" {{ 'selected' if personne_filtre == "Loïc" }}>Loïc</option>
+        </select>
       </div>
       <div class="hero-illo">🌱</div>
     </div>
@@ -712,6 +744,19 @@
       <div class="hero-text">
         <h1>Savings</h1>
         <p>Vos objectifs d'épargne et suivi mensuel</p>
+      </div>
+      <div class="hero-filters">
+        <select id="mois-select-sav" class="hero-select" onchange="applyFilters()">
+          {% for m in mois_dispo %}
+          <option value="{{ m }}" {{ 'selected' if m == mois_selectionne }}>{{ m }}</option>
+          {% endfor %}
+          <option value="" {{ 'selected' if not mois_selectionne }}>Tous les mois</option>
+        </select>
+        <select id="personne-select-sav" class="hero-select" onchange="applyFilters()">
+          <option value="" {{ 'selected' if not personne_filtre }}>Tous</option>
+          <option value="Cerise" {{ 'selected' if personne_filtre == "Cerise" }}>Cerise</option>
+          <option value="Loïc" {{ 'selected' if personne_filtre == "Loïc" }}>Loïc</option>
+        </select>
       </div>
       <div class="hero-illo">⭐</div>
     </div>
@@ -795,13 +840,18 @@ function filterTxn(type, btn) {
 //  FILTRES MOIS + PERSONNE
 // ══════════════════════════════════════
 function applyFilters() {
-  const mois = document.getElementById('mois-select').value;
-  const personne = document.getElementById('personne-select').value;
-  const params = new URLSearchParams();
-  if (mois) params.set('mois', mois);
+  const activePage = document.querySelector('.page.active').id;
+  let moisId, personneId;
+  if (activePage === 'page-transactions') { moisId = 'mois-select-txn'; personneId = 'personne-select-txn'; }
+  else if (activePage === 'page-budget')  { moisId = 'mois-select-bud'; personneId = 'personne-select-bud'; }
+  else if (activePage === 'page-savings') { moisId = 'mois-select-sav'; personneId = 'personne-select-sav'; }
+  else { moisId = 'mois-select'; personneId = 'personne-select'; }
+  const mois     = document.getElementById(moisId).value;
+  const personne = document.getElementById(personneId).value;
+  const params   = new URLSearchParams();
+  if (mois)     params.set('mois', mois);
   if (personne) params.set('personne', personne);
-  const qs = params.toString();
-  window.location.href = qs ? '/?' + qs : '/';
+  window.location.href = params.toString() ? '/?' + params.toString() : '/';
 }
 
 // ══════════════════════════════════════
