@@ -488,11 +488,16 @@
       </div>
       <div class="hero-right">
         <div class="hero-month">
-          <select id="mois-select" onchange="changeMois(this.value)">
+          <select id="mois-select" onchange="applyFilters()">
             {% for m in mois_dispo %}
             <option value="{{ m }}" {{ 'selected' if m == mois_selectionne }}>{{ m }}</option>
             {% endfor %}
             <option value="">Tous les mois</option>
+          </select>
+          <select id="personne-select" onchange="applyFilters()">
+            <option value="" {{ 'selected' if not personne_filtre }}>Tous</option>
+            <option value="Cerise" {{ 'selected' if personne_filtre == 'Cerise' }}>Cerise</option>
+            <option value="Loïc" {{ 'selected' if personne_filtre == 'Loïc' }}>Loïc</option>
           </select>
         </div>
         <div class="hero-illo">🐾</div>
@@ -787,10 +792,16 @@ function filterTxn(type, btn) {
 }
 
 // ══════════════════════════════════════
-//  CHANGEMENT DE MOIS
+//  FILTRES MOIS + PERSONNE
 // ══════════════════════════════════════
-function changeMois(mois) {
-  window.location.href = mois ? '/?mois=' + mois : '/';
+function applyFilters() {
+  const mois = document.getElementById('mois-select').value;
+  const personne = document.getElementById('personne-select').value;
+  const params = new URLSearchParams();
+  if (mois) params.set('mois', mois);
+  if (personne) params.set('personne', personne);
+  const qs = params.toString();
+  window.location.href = qs ? '/?' + qs : '/';
 }
 
 // ══════════════════════════════════════

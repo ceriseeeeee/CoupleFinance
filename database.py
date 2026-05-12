@@ -214,9 +214,9 @@ def get_transactions(mois: str = None, personne: str = None) -> list[dict]:
         conn.close()
 
 
-def get_stats(mois: str = None) -> dict:
+def get_stats(mois: str = None, personne: str = None) -> dict:
     """Calcule les statistiques agrégées pour le dashboard."""
-    transactions = get_transactions(mois=mois)
+    transactions = get_transactions(mois=mois, personne=personne)
 
     debits  = [t for t in transactions if t['type'] == 'debit']
     credits = [t for t in transactions if t['type'] == 'credit']
