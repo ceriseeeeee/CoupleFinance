@@ -351,7 +351,6 @@
     }
     #dash-toast.show { opacity: 1; transform: translateY(0); }
     #dash-toast.ok { background: var(--green-dim); }
-    .pos { color: var(--green); font-weight: 600; }
 
     /* ══════════════════════════════════════
        BUDGET PAGE — barres horizontales
@@ -525,52 +524,46 @@
     <div class="kpi-grid">
       <div class="kpi-card dark">
         <div class="kpi-label">Solde restant</div>
-        <div class="kpi-val" style="color:{{ 'var(--green)' if stats.get('solde', 0) >= 0 else 'var(--red)' }}">
-          {{ '+' if stats.get('solde', 0) >= 0 else '' }}{{ "%.0f"|format(stats.get('solde', 0)) }} €
-        </div>
+        <div class="kpi-val" id="kpi-solde">—</div>
         <div class="kpi-sub">Ce mois</div>
       </div>
       <div class="kpi-card green">
         <div class="kpi-label">Revenus</div>
-        <div class="kpi-val" style="color:var(--green)">{{ "%.0f"|format(stats.get('total_revenus', 0)) }} €</div>
+        <div class="kpi-val" id="kpi-revenus" style="color:var(--green)">—</div>
         <div class="kpi-sub up">↑ Entrées</div>
       </div>
       <div class="kpi-card red">
         <div class="kpi-label">Dépenses éffectuées</div>
-        <div class="kpi-val" style="color:var(--red)">{{ "%.0f"|format(stats.get('total_depenses', 0)) }} €</div>
+        <div class="kpi-val" id="kpi-depenses" style="color:var(--red)">—</div>
         <div class="kpi-sub down">↓ Sorties</div>
       </div>
       <div class="kpi-card amber">
         <div class="kpi-label">Épargne</div>
-        <div class="kpi-val" style="color:var(--amber)">{{ "%.0f"|format([stats.get('solde', 0), 0]|max) }} €</div>
+        <div class="kpi-val" id="kpi-epargne" style="color:var(--amber)">—</div>
         <div class="kpi-sub">Estimée</div>
       </div>
       <div class="kpi-card blue">
         <div class="kpi-label">Nbre de transactions</div>
-        <div class="kpi-val" style="color:var(--blue)">{{ stats.get('nb_transactions', 0) }}</div>
-        <div class="kpi-sub {{ 'down' if stats.get('nb_unknown', 0) > 0 else '' }}">{{ stats.get('nb_unknown', 0) }} inconnues</div>
+        <div class="kpi-val" id="kpi-nb-txn" style="color:var(--blue)">—</div>
+        <div class="kpi-sub" id="kpi-nb-unknown">—</div>
       </div>
     </div>
 
     <div class="chart-grid-3">
-      <!-- Courbe évolution -->
       <div class="card">
         <div class="card-title">Évolution Revenus / Dépenses</div>
         <div class="chart-wrap h200"><canvas id="chartEvolution"></canvas></div>
       </div>
-      <!-- Treemap / barres catégories -->
       <div class="card">
         <div class="card-title">Répartition dépenses</div>
         <div class="chart-wrap h200"><canvas id="chartCategories"></canvas></div>
       </div>
-      <!-- Cerise vs Loïc -->
       <div class="card">
         <div class="card-title">Cerise vs Loïc</div>
         <div class="chart-wrap h200"><canvas id="chartPersonnes"></canvas></div>
       </div>
     </div>
 
-    <!-- Top dépenses -->
     <div class="card chart-grid-full">
       <div class="card-title">Top dépenses du mois</div>
       <table class="txn-table">
@@ -578,18 +571,7 @@
           <th>#</th><th>Date</th><th>Libellé</th>
           <th>Personne</th><th>Catégorie</th><th style="text-align:right">Montant</th>
         </tr></thead>
-        <tbody>
-          {% for t in stats.get('top_depenses', []) %}
-          <tr>
-            <td style="color:var(--muted);font-weight:600;">{{ loop.index }}</td>
-            <td style="color:var(--muted)">{{ t.date }}</td>
-            <td style="font-weight:500">{{ t.libelle_clean or t.libelle }}</td>
-            <td>{{ t.personne }}</td>
-            <td><span class="cat-badge">{{ t.categorie }}</span></td>
-            <td class="neg" style="text-align:right">−{{ "%.2f"|format(t.montant)|replace('.', ',') }} €</td>
-          </tr>
-          {% endfor %}
-        </tbody>
+        <tbody id="top-depenses-body"></tbody>
       </table>
     </div>
   </div>
@@ -633,34 +615,7 @@
           <th>Date</th><th>Libellé</th><th>Catégorie</th>
           <th>Personne</th><th>Banque</th><th style="text-align:right">Montant</th>
         </tr></thead>
-        <tbody id="txn-body">
-          {% for t in transactions %}
-          <tr class="{{ 'unknown' if t.categorie == 'Unknown' else '' }}"
-              data-type="{{ t.type }}"
-              data-cat="{{ t.categorie }}"
-              data-personne="{{ t.personne|lower }}"
-              data-id="{{ t.id }}">
-            <td style="color:var(--muted)">{{ t.date }}</td>
-            <td style="font-weight:500">{{ t.libelle_clean or t.libelle }}</td>
-            <td>
-              <select class="cat-select-inline" onchange="correctDashboard('{{ t.id }}', this.value, this)">
-                {% set cats = ['Loyer','Appartement','Abonnements','Électricité','Transport',
-                  'Shopping','Courses & Alimentation','Eating out','Santé',
-                  'Divertissements & Loisirs','Épargne','Bénin Voyage',
-                  'Voyage Couple','Revenus','Virements','Unknown'] %}
-                {% for cat in cats %}
-                <option value="{{ cat }}" {{ 'selected' if t.categorie == cat }}>{{ cat }}</option>
-                {% endfor %}
-              </select>
-            </td>
-            <td>{{ t.personne }}</td>
-            <td style="color:var(--muted);font-size:.78rem">{{ t.banque }}</td>
-            <td class="{{ 'neg' if t.type == 'debit' else 'pos' }}" style="text-align:right">
-              {{ '-' if t.type == 'debit' else '+' }}{{ "%.2f"|format(t.montant)|replace('.', ',') }} €
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
+        <tbody id="txn-body"></tbody>
       </table>
     </div>
   </div>
@@ -670,7 +625,7 @@
     <div class="hero" style="background:#0F4C35;">
       <div class="hero-text">
         <h1>Budget</h1>
-        <p>Suivi prévu vs réalisé · {{ mois_selectionne or 'tous les mois' }}</p>
+        <p>Suivi prévu vs réalisé</p>
       </div>
       <div class="hero-right">
         <div class="hero-filters">
@@ -691,7 +646,6 @@
     </div>
 
     <div class="chart-grid-2">
-      <!-- Barres horizontales budget prévu vs réalisé -->
       <div class="card">
         <div class="card-title">Budget par catégorie — prévu vs réalisé</div>
         <div class="budget-row budget-row-head">
@@ -716,31 +670,24 @@
           'Voyage Couple': 200
         } %}
         {% for cat, prevu in budget_prevu.items() %}
-        {% set realise = stats.get('par_categorie', {}).get(cat, 0) %}
-        {% set pct = ((realise / prevu) * 100)|int if prevu > 0 else 0 %}
-        <div class="budget-row">
+        <div class="budget-row budget-data-row" data-cat="{{ cat }}" data-prevu="{{ prevu }}">
           <span style="font-weight:500;font-size:.82rem">{{ cat }}</span>
           <div class="bud-bar-track">
-            <div class="bud-bar-fill" style="
-              width: {{ [pct, 100]|min }}%;
-              background: {{ '#F87171' if pct > 90 else ('#F59E0B' if pct > 70 else '#2ECC9A') }};
-            "></div>
+            <div class="bud-bar-fill" style="width:0%;background:#2ECC9A;"></div>
           </div>
           <span style="text-align:right;color:var(--muted);font-size:.8rem">{{ prevu }} €</span>
-          <span style="text-align:right;font-size:.8rem">{{ "%.0f"|format(realise) }} €</span>
-          <span class="bud-pct {{ 'over' if pct > 90 else ('warn' if pct > 70 else 'ok') }}">{{ pct }}%</span>
+          <span class="bud-realise" style="text-align:right;font-size:.8rem">0 €</span>
+          <span class="bud-pct ok">0%</span>
         </div>
         {% endfor %}
       </div>
 
-      <!-- Graphique taux consommation -->
       <div class="card">
         <div class="card-title">Taux de consommation</div>
         <div class="chart-wrap h240"><canvas id="chartBudget"></canvas></div>
       </div>
     </div>
 
-    <!-- Tableau répartition par personne -->
     <div class="card">
       <div class="card-header">
         <div class="card-title" style="margin-bottom:0">Répartition dépenses par personne</div>
@@ -804,13 +751,12 @@
             <div class="goal-sub">Objectif : 400 € / mois</div>
           </div>
         </div>
-        <div class="goal-amount">{{ "%.0f"|format([stats.get('solde', 0), 0]|max) }} €</div>
+        <div class="goal-amount" id="sav-epargne">—</div>
         <div class="goal-target">épargné ce mois</div>
-        {% set savpct = (([stats.get('solde', 0), 0]|max / 400) * 100)|int %}
         <div class="goal-bar-track">
-          <div class="goal-bar-fill" style="width:{{ [savpct, 100]|min }}%;background:{{ '#F87171' if savpct < 50 else '#2ECC9A' }};"></div>
+          <div class="goal-bar-fill" id="sav-bar" style="width:0%"></div>
         </div>
-        <div class="goal-pct">{{ [savpct, 100]|min }}% de l'objectif</div>
+        <div class="goal-pct" id="sav-pct">0% de l'objectif</div>
       </div>
     </div>
 
@@ -834,7 +780,7 @@ function showPage(name) {
 }
 
 // ══════════════════════════════════════
-//  FILTRE TRANSACTIONS
+//  FILTRE LOCAL TRANSACTIONS
 // ══════════════════════════════════════
 function normalizeName(s) {
   return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -855,32 +801,7 @@ function filterTxn(type, btn) {
 }
 
 // ══════════════════════════════════════
-//  FILTRES MOIS + PERSONNE
-// ══════════════════════════════════════
-function applyFilters() {
-  const activePage = document.querySelector('.page.active').id;
-  let moisId, personneId, pageName;
-  if (activePage === 'page-transactions') { moisId = 'mois-select-txn'; personneId = 'personne-select-txn'; pageName = 'transactions'; }
-  else if (activePage === 'page-budget')  { moisId = 'mois-select-bud'; personneId = 'personne-select-bud'; pageName = 'budget'; }
-  else if (activePage === 'page-savings') { moisId = 'mois-select-sav'; personneId = 'personne-select-sav'; pageName = 'savings'; }
-  else { moisId = 'mois-select'; personneId = 'personne-select'; pageName = 'overview'; }
-  const mois     = document.getElementById(moisId).value;
-  const personne = document.getElementById(personneId).value;
-  const params   = new URLSearchParams();
-  if (mois)     params.set('mois', mois);
-  if (personne) params.set('personne', personne);
-  params.set('page', pageName);
-  window.location.href = '/?' + params.toString();
-}
-
-
-// ══════════════════════════════════════
-//  DONNÉES INJECTÉES PAR FLASK
-// ══════════════════════════════════════
-const STATS = {{ stats | tojson }};
-
-// ══════════════════════════════════════
-//  CONFIG CHART.JS — thème épuré
+//  CHART.JS CONFIG
 // ══════════════════════════════════════
 Chart.defaults.font.family = 'Nunito';
 Chart.defaults.font.size = 12;
@@ -889,120 +810,349 @@ Chart.defaults.borderColor = '#E8EBF0';
 
 const PALETTE = ['#2ECC9A','#60A5FA','#F87171','#F59E0B','#A78BFA','#34D399','#FB923C','#F472B6','#38BDF8'];
 
-// ── Courbe évolution ──
-(function() {
-  const el = document.getElementById('chartEvolution');
-  if (!el || !STATS.evolution_mensuelle?.length) return;
-  const evo = STATS.evolution_mensuelle;
-  new Chart(el, {
-    type: 'line',
-    data: {
-      labels: evo.map(e => e.mois),
-      datasets: [
-        { label: 'Revenus', data: evo.map(e => e.revenus), borderColor: '#2ECC9A', backgroundColor: 'rgba(46,204,154,.08)', tension: .4, fill: true, pointBackgroundColor: '#2ECC9A', pointRadius: 3 },
-        { label: 'Dépenses', data: evo.map(e => e.depenses), borderColor: '#F87171', backgroundColor: 'rgba(248,113,113,.08)', tension: .4, fill: true, pointBackgroundColor: '#F87171', pointRadius: 3 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12 } } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v + ' €' } } } }
-  });
-})();
+// ══════════════════════════════════════
+//  CONSTANTES
+// ══════════════════════════════════════
+const ALL_CATS = [
+  'Loyer','Appartement','Abonnements','Électricité','Transport',
+  'Shopping','Courses & Alimentation','Eating out','Santé',
+  'Divertissements & Loisirs','Épargne','Bénin Voyage',
+  'Voyage Couple','Revenus','Virements','Unknown'
+];
 
-// ── Donut catégories ──
-(function() {
-  const el = document.getElementById('chartCategories');
-  if (!el || !STATS.par_categorie) return;
-  const cats = Object.keys(STATS.par_categorie).slice(0, 7);
-  const vals = cats.map(k => STATS.par_categorie[k]);
-  new Chart(el, {
-    type: 'doughnut',
-    data: { labels: cats, datasets: [{ data: vals, backgroundColor: PALETTE, borderWidth: 0, hoverOffset: 6 }] },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, padding: 8, font: { size: 11 } } } } }
-  });
-})();
+const BUDGETS_PREVUS = {
+  'Loyer': 1075, 'Appartement': 70, 'Abonnements': 181,
+  'Électricité': 100, 'Transport': 50, 'Shopping': 200,
+  'Courses & Alimentation': 300, 'Eating out': 245,
+  'Santé': 25, 'Divertissements & Loisirs': 50,
+  'Épargne': 400, 'Bénin Voyage': 200, 'Voyage Couple': 200
+};
 
-// ── Barres Cerise vs Loïc ──
-(function() {
-  const el = document.getElementById('chartPersonnes');
-  if (!el || !STATS.par_personne) return;
-  const personnes = Object.keys(STATS.par_personne);
-  new Chart(el, {
-    type: 'bar',
-    data: {
-      labels: personnes,
-      datasets: [
-        { label: 'Dépenses', data: personnes.map(p => STATS.par_personne[p].depenses), backgroundColor: 'rgba(248,113,113,.7)', borderRadius: 6 },
-        { label: 'Revenus',  data: personnes.map(p => STATS.par_personne[p].revenus),  backgroundColor: 'rgba(46,204,154,.7)',  borderRadius: 6 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10 } } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v + ' €' } } } }
-  });
-})();
+// ══════════════════════════════════════
+//  INSTANCES CHART (pour destroy/recreate)
+// ══════════════════════════════════════
+let chartEvolution = null;
+let chartCategories = null;
+let chartPersonnes = null;
+let chartBudget = null;
+let chartBudgetPersonne = null;
+let chartSavings = null;
 
-// ── Budget taux consommation ──
-(function() {
-  const el = document.getElementById('chartBudget');
-  if (!el) return;
-  const budgets = {
-    'Loyer': 1075, 'Appartement': 70, 'Abonnements': 181,
-    'Électricité': 100, 'Transport': 50, 'Shopping': 200,
-    'Courses & Alimentation': 300, 'Eating out': 245,
-    'Santé': 25, 'Divertissements & Loisirs': 50,
-    'Épargne': 400, 'Bénin Voyage': 200, 'Voyage Couple': 200
-  };
-  const labels = Object.keys(budgets);
-  const prevus = Object.values(budgets);
-  const realises = labels.map(l => (STATS.par_categorie || {})[l] || 0);
-  new Chart(el, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Prévu',   data: prevus,   backgroundColor: 'rgba(96,165,250,.5)', borderRadius: 4 },
-        { label: 'Réalisé', data: realises, backgroundColor: 'rgba(46,204,154,.8)', borderRadius: 4 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v + ' €' } } } }
-  });
-})();
+function destroyChart(instance) {
+  if (instance) instance.destroy();
+  return null;
+}
 
-// ── Budget par personne ──
-(function() {
-  const el = document.getElementById('chartBudgetPersonne');
-  if (!el || !STATS.par_personne) return;
-  const cats = Object.keys(STATS.par_categorie || {}).slice(0, 6);
-  new Chart(el, {
-    type: 'bar',
-    data: {
-      labels: cats,
-      datasets: Object.keys(STATS.par_personne).map((p, i) => ({
-        label: p, data: cats.map(() => Math.round(Math.random() * 300 + 50)),
-        backgroundColor: PALETTE[i], borderRadius: 4
-      }))
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v + ' €' } } } }
-  });
-})();
+// ══════════════════════════════════════
+//  UPDATE KPIs
+// ══════════════════════════════════════
+function updateKPIs(stats) {
+  const solde   = stats.solde || 0;
+  const revenus = stats.total_revenus || 0;
+  const depenses = stats.total_depenses || 0;
+  const epargne = Math.max(solde, 0);
+  const nbTxn   = stats.nb_transactions || 0;
+  const nbUnknown = stats.nb_unknown || 0;
 
-// ── Savings évolution ──
-(function() {
-  const el = document.getElementById('chartSavings');
-  if (!el || !STATS.evolution_mensuelle?.length) return;
-  const evo = STATS.evolution_mensuelle;
-  new Chart(el, {
-    type: 'bar',
-    data: {
-      labels: evo.map(e => e.mois),
-      datasets: [{ label: 'Épargne', data: evo.map(e => Math.max(0, e.revenus - e.depenses)), backgroundColor: 'rgba(46,204,154,.7)', borderRadius: 6 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v + ' €' } } } }
+  const soldeEl = document.getElementById('kpi-solde');
+  soldeEl.textContent = (solde >= 0 ? '+' : '') + Math.round(solde) + ' €';
+  soldeEl.style.color = solde >= 0 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('kpi-revenus').textContent  = Math.round(revenus) + ' €';
+  document.getElementById('kpi-depenses').textContent = Math.round(depenses) + ' €';
+  document.getElementById('kpi-epargne').textContent  = Math.round(epargne) + ' €';
+  document.getElementById('kpi-nb-txn').textContent   = nbTxn;
+
+  const nuEl = document.getElementById('kpi-nb-unknown');
+  nuEl.textContent = nbUnknown + ' inconnues';
+  nuEl.className = 'kpi-sub' + (nbUnknown > 0 ? ' down' : '');
+}
+
+// ══════════════════════════════════════
+//  UPDATE GRAPHIQUES
+// ══════════════════════════════════════
+function updateCharts(stats) {
+  const evo      = stats.evolution_mensuelle || [];
+  const parCat   = stats.par_categorie || {};
+  const parPer   = stats.par_personne || {};
+  const personnes = Object.keys(parPer);
+
+  // Évolution
+  chartEvolution = destroyChart(chartEvolution);
+  const elEvo = document.getElementById('chartEvolution');
+  if (elEvo && evo.length) {
+    chartEvolution = new Chart(elEvo, {
+      type: 'line',
+      data: {
+        labels: evo.map(e => e.mois),
+        datasets: [
+          { label: 'Revenus',  data: evo.map(e => e.revenus),  borderColor: '#2ECC9A', backgroundColor: 'rgba(46,204,154,.08)', tension: .4, fill: true, pointBackgroundColor: '#2ECC9A', pointRadius: 3 },
+          { label: 'Dépenses', data: evo.map(e => e.depenses), borderColor: '#F87171', backgroundColor: 'rgba(248,113,113,.08)', tension: .4, fill: true, pointBackgroundColor: '#F87171', pointRadius: 3 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12 } } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v + ' €' } } } }
+    });
+  }
+
+  // Donut catégories
+  chartCategories = destroyChart(chartCategories);
+  const elCat = document.getElementById('chartCategories');
+  const cats = Object.keys(parCat).slice(0, 7);
+  if (elCat && cats.length) {
+    chartCategories = new Chart(elCat, {
+      type: 'doughnut',
+      data: { labels: cats, datasets: [{ data: cats.map(k => parCat[k]), backgroundColor: PALETTE, borderWidth: 0, hoverOffset: 6 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, padding: 8, font: { size: 11 } } } } }
+    });
+  }
+
+  // Barres Cerise vs Loïc
+  chartPersonnes = destroyChart(chartPersonnes);
+  const elPer = document.getElementById('chartPersonnes');
+  if (elPer && personnes.length) {
+    chartPersonnes = new Chart(elPer, {
+      type: 'bar',
+      data: {
+        labels: personnes,
+        datasets: [
+          { label: 'Dépenses', data: personnes.map(p => parPer[p].depenses), backgroundColor: 'rgba(248,113,113,.7)', borderRadius: 6 },
+          { label: 'Revenus',  data: personnes.map(p => parPer[p].revenus),  backgroundColor: 'rgba(46,204,154,.7)',  borderRadius: 6 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10 } } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v + ' €' } } } }
+    });
+  }
+
+  // Budget taux consommation
+  chartBudget = destroyChart(chartBudget);
+  const elBud = document.getElementById('chartBudget');
+  if (elBud) {
+    const budLabels = Object.keys(BUDGETS_PREVUS);
+    chartBudget = new Chart(elBud, {
+      type: 'bar',
+      data: {
+        labels: budLabels,
+        datasets: [
+          { label: 'Prévu',   data: Object.values(BUDGETS_PREVUS),      backgroundColor: 'rgba(96,165,250,.5)', borderRadius: 4 },
+          { label: 'Réalisé', data: budLabels.map(l => parCat[l] || 0), backgroundColor: 'rgba(46,204,154,.8)', borderRadius: 4 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v + ' €' } } } }
+    });
+  }
+
+  // Budget par personne
+  chartBudgetPersonne = destroyChart(chartBudgetPersonne);
+  const elBudPer = document.getElementById('chartBudgetPersonne');
+  const cats6 = Object.keys(parCat).slice(0, 6);
+  if (elBudPer && personnes.length) {
+    chartBudgetPersonne = new Chart(elBudPer, {
+      type: 'bar',
+      data: {
+        labels: cats6,
+        datasets: personnes.map((p, i) => ({
+          label: p, data: cats6.map(() => Math.round(Math.random() * 300 + 50)),
+          backgroundColor: PALETTE[i], borderRadius: 4
+        }))
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v + ' €' } } } }
+    });
+  }
+
+  // Savings évolution
+  chartSavings = destroyChart(chartSavings);
+  const elSav = document.getElementById('chartSavings');
+  if (elSav && evo.length) {
+    chartSavings = new Chart(elSav, {
+      type: 'bar',
+      data: {
+        labels: evo.map(e => e.mois),
+        datasets: [{ label: 'Épargne', data: evo.map(e => Math.max(0, e.revenus - e.depenses)), backgroundColor: 'rgba(46,204,154,.7)', borderRadius: 6 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => v + ' €' } } } }
+    });
+  }
+}
+
+// ══════════════════════════════════════
+//  UPDATE TABLE TRANSACTIONS
+// ══════════════════════════════════════
+function esc(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function buildCatSelect(txnId, currentCat) {
+  const opts = ALL_CATS.map(c =>
+    `<option value="${esc(c)}"${currentCat === c ? ' selected' : ''}>${esc(c)}</option>`
+  ).join('');
+  return `<select class="cat-select-inline" onchange="correctDashboard('${esc(txnId)}', this.value, this)">${opts}</select>`;
+}
+
+function updateTxnTable(transactions) {
+  const tbody = document.getElementById('txn-body');
+  if (!tbody) return;
+  tbody.innerHTML = transactions.map(t => {
+    const libelle = esc(t.libelle_clean || t.libelle);
+    const montantStr = t.montant.toFixed(2).replace('.', ',');
+    const sign = t.type === 'debit' ? '−' : '+';
+    const cls  = t.type === 'debit' ? 'neg' : 'pos';
+    const unknownCls = t.categorie === 'Unknown' ? 'unknown' : '';
+    return `<tr class="${unknownCls}"
+              data-type="${esc(t.type)}"
+              data-cat="${esc(t.categorie)}"
+              data-personne="${esc((t.personne || '').toLowerCase())}"
+              data-id="${esc(t.id)}">
+      <td style="color:var(--muted)">${esc(t.date)}</td>
+      <td style="font-weight:500">${libelle}</td>
+      <td>${buildCatSelect(t.id, t.categorie)}</td>
+      <td>${esc(t.personne)}</td>
+      <td style="color:var(--muted);font-size:.78rem">${esc(t.banque)}</td>
+      <td class="${cls}" style="text-align:right">${sign}${montantStr} €</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+//  UPDATE TOP DÉPENSES
+// ══════════════════════════════════════
+function updateTopDepenses(tops) {
+  const tbody = document.getElementById('top-depenses-body');
+  if (!tbody) return;
+  tbody.innerHTML = tops.map((t, i) => {
+    const libelle = esc(t.libelle_clean || t.libelle);
+    const montantStr = t.montant.toFixed(2).replace('.', ',');
+    return `<tr>
+      <td style="color:var(--muted);font-weight:600;">${i + 1}</td>
+      <td style="color:var(--muted)">${esc(t.date)}</td>
+      <td style="font-weight:500">${libelle}</td>
+      <td>${esc(t.personne)}</td>
+      <td><span class="cat-badge">${esc(t.categorie)}</span></td>
+      <td class="neg" style="text-align:right">−${montantStr} €</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+//  UPDATE BUDGET ROWS
+// ══════════════════════════════════════
+function updateBudgetRows(parCat) {
+  document.querySelectorAll('.budget-data-row').forEach(row => {
+    const cat    = row.dataset.cat;
+    const prevu  = parseInt(row.dataset.prevu) || 0;
+    const realise = parCat[cat] || 0;
+    const pct    = prevu > 0 ? Math.round((realise / prevu) * 100) : 0;
+    const color  = pct > 90 ? '#F87171' : (pct > 70 ? '#F59E0B' : '#2ECC9A');
+    const pctCls = pct > 90 ? 'over'   : (pct > 70 ? 'warn'    : 'ok');
+
+    const fill = row.querySelector('.bud-bar-fill');
+    fill.style.width      = Math.min(pct, 100) + '%';
+    fill.style.background = color;
+
+    row.querySelector('.bud-realise').textContent = Math.round(realise) + ' €';
+
+    const pctEl = row.querySelector('.bud-pct');
+    pctEl.textContent = pct + '%';
+    pctEl.className   = `bud-pct ${pctCls}`;
   });
-})();
+}
+
+// ══════════════════════════════════════
+//  UPDATE SAVINGS
+// ══════════════════════════════════════
+function updateSavings(stats) {
+  const epargne = Math.max(stats.solde || 0, 0);
+  const savPct  = Math.min(Math.round((epargne / 400) * 100), 100);
+
+  const elAmt = document.getElementById('sav-epargne');
+  if (elAmt) elAmt.textContent = Math.round(epargne) + ' €';
+
+  const elBar = document.getElementById('sav-bar');
+  if (elBar) {
+    elBar.style.width      = savPct + '%';
+    elBar.style.background = savPct < 50 ? '#F87171' : '#2ECC9A';
+  }
+
+  const elPct = document.getElementById('sav-pct');
+  if (elPct) elPct.textContent = savPct + "% de l'objectif";
+}
+
+// ══════════════════════════════════════
+//  UPDATE DASHBOARD — point d'entrée
+// ══════════════════════════════════════
+function updateDashboard(data) {
+  const stats        = data.stats || {};
+  const transactions = data.transactions || [];
+
+  updateKPIs(stats);
+  updateCharts(stats);
+  updateTxnTable(transactions);
+  updateTopDepenses(stats.top_depenses || []);
+  updateBudgetRows(stats.par_categorie || {});
+  updateSavings(stats);
+}
+
+// ══════════════════════════════════════
+//  SYNC SELECTS (mois + personne)
+// ══════════════════════════════════════
+function syncSelects(mois, personne) {
+  ['mois-select','mois-select-txn','mois-select-bud','mois-select-sav'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = mois || '';
+  });
+  ['personne-select','personne-select-txn','personne-select-bud','personne-select-sav'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = personne || '';
+  });
+}
+
+// ══════════════════════════════════════
+//  CHARGEMENT DONNÉES
+// ══════════════════════════════════════
+async function loadData(mois, personne) {
+  const params = new URLSearchParams();
+  if (mois)     params.set('mois', mois);
+  if (personne) params.set('personne', personne);
+  try {
+    const res  = await fetch('/api/dashboard-data?' + params.toString());
+    const data = await res.json();
+    updateDashboard(data);
+    syncSelects(mois, personne);
+  } catch (e) {
+    console.error('Erreur chargement données:', e);
+  }
+}
+
+// ══════════════════════════════════════
+//  FILTRES MOIS + PERSONNE (async)
+// ══════════════════════════════════════
+async function applyFilters() {
+  const activePage = document.querySelector('.page.active').id;
+  let moisId, personneId;
+  if (activePage === 'page-transactions') { moisId = 'mois-select-txn'; personneId = 'personne-select-txn'; }
+  else if (activePage === 'page-budget')  { moisId = 'mois-select-bud'; personneId = 'personne-select-bud'; }
+  else if (activePage === 'page-savings') { moisId = 'mois-select-sav'; personneId = 'personne-select-sav'; }
+  else                                    { moisId = 'mois-select';     personneId = 'personne-select'; }
+
+  const mois     = document.getElementById(moisId).value;
+  const personne = document.getElementById(personneId).value;
+  await loadData(mois, personne);
+}
+
+// ══════════════════════════════════════
+//  INIT — chargement initial via fetch
+// ══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  const mois     = document.getElementById('mois-select').value;
+  const personne = document.getElementById('personne-select').value;
+  await loadData(mois, personne);
+});
 
 function toggleBudgetPerson(p, btn) {
   document.querySelectorAll('.person-btn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
 }
 </script>
+
 <div id="dash-toast"></div>
 
 <script>
@@ -1021,12 +1171,12 @@ async function recategorizeAI() {
     } else {
       showDashToast('Erreur IA', '');
       btn.disabled = false;
-      btn.textContent = '✦ Catégoriser avec l\'IA';
+      btn.textContent = "✦ Catégoriser avec l'IA";
     }
   } catch(e) {
     showDashToast('Erreur réseau', '');
     btn.disabled = false;
-    btn.textContent = '✦ Catégoriser avec l\'IA';
+    btn.textContent = "✦ Catégoriser avec l'IA";
   }
 }
 
@@ -1036,7 +1186,11 @@ async function correctDashboard(transactionId, newCategory, selectEl) {
     const res = await fetch('/api/correct', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transaction_id: transactionId, categorie: newCategory, libelle: selectEl.closest('tr').querySelector('td:nth-child(2)').textContent.trim() })
+      body: JSON.stringify({
+        transaction_id: transactionId,
+        categorie: newCategory,
+        libelle: selectEl.closest('tr').querySelector('td:nth-child(2)').textContent.trim()
+      })
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();

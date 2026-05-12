@@ -168,10 +168,10 @@ def save_to_db(session_id):
 @app.route("/api/dashboard-data")
 def api_dashboard_data():
     """Retourne stats + transactions filtrées par mois et/ou personne."""
-    mois = request.args.get("mois")
+    mois = request.args.get("mois") or None
     personne = request.args.get("personne") or None
     transactions = get_transactions(mois=mois, personne=personne)
-    stats = get_stats(mois=mois)
+    stats = get_stats(mois=mois, personne=personne)
     return jsonify({"transactions": transactions, "stats": stats})
 
 
