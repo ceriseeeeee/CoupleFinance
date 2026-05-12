@@ -134,7 +134,7 @@
       align-items: center;
       justify-content: space-between;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
       background: var(--dark);
     }
 
@@ -181,6 +181,13 @@
       display: flex;
       gap: 8px;
       align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-select {
+      position: relative;
+      z-index: 1;
     }
 
     /* ══════════════════════════════════════
