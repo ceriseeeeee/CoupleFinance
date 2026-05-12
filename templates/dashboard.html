@@ -1036,7 +1036,7 @@ async function correctDashboard(transactionId, newCategory, selectEl) {
     const res = await fetch('/api/correct', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transaction_id: transactionId, categorie: newCategory })
+      body: JSON.stringify({ transaction_id: transactionId, categorie: newCategory, libelle: selectEl.closest('tr').querySelector('td:nth-child(2)').textContent.trim() })
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();

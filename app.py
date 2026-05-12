@@ -132,6 +132,12 @@ def correct():
     # Mise à jour en base si déjà sauvegardé
     update_categorie(transaction_id, new_category)
 
+    if new_category != "Unknown":
+        from categorizer import save_user_correction
+        libelle = data.get("libelle", "")
+        if libelle:
+            save_user_correction(libelle, new_category)
+
     return jsonify({"success": True})
 
 
