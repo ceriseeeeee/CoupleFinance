@@ -847,18 +847,30 @@ function filterTxn(type, btn) {
 // ══════════════════════════════════════
 function applyFilters() {
   const activePage = document.querySelector('.page.active').id;
-  let moisId, personneId;
-  if (activePage === 'page-transactions') { moisId = 'mois-select-txn'; personneId = 'personne-select-txn'; }
-  else if (activePage === 'page-budget')  { moisId = 'mois-select-bud'; personneId = 'personne-select-bud'; }
-  else if (activePage === 'page-savings') { moisId = 'mois-select-sav'; personneId = 'personne-select-sav'; }
-  else { moisId = 'mois-select'; personneId = 'personne-select'; }
+  let moisId, personneId, pageName;
+  if (activePage === 'page-transactions') { moisId = 'mois-select-txn'; personneId = 'personne-select-txn'; pageName = 'transactions'; }
+  else if (activePage === 'page-budget')  { moisId = 'mois-select-bud'; personneId = 'personne-select-bud'; pageName = 'budget'; }
+  else if (activePage === 'page-savings') { moisId = 'mois-select-sav'; personneId = 'personne-select-sav'; pageName = 'savings'; }
+  else { moisId = 'mois-select'; personneId = 'personne-select'; pageName = 'overview'; }
   const mois     = document.getElementById(moisId).value;
   const personne = document.getElementById(personneId).value;
   const params   = new URLSearchParams();
   if (mois)     params.set('mois', mois);
   if (personne) params.set('personne', personne);
-  window.location.href = params.toString() ? '/?' + params.toString() : '/';
+  params.set('page', pageName);
+  window.location.href = '/?' + params.toString();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  const params = new URLSearchParams(window.location.search);
+  const page = params.get('page');
+  if (page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page)?.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelector(`.nav-item[onclick*="${page}"]`)?.classList.add('active');
+  }
+});
 
 // ══════════════════════════════════════
 //  DONNÉES INJECTÉES PAR FLASK
