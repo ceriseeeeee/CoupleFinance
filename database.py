@@ -105,14 +105,16 @@ def init_db():
 #  INSERT
 # ─────────────────────────────────────────────
 
-def insert_transactions(transactions: list[dict]):
+def insert_transactions(transactions: list[dict]) -> int:
     """
-    Insère les transactions en ignorant les doublons (basé sur l'id UUID).
+    Insère les transactions en ignorant les doublons (basé sur l'id).
+    Retourne le nombre de lignes réellement insérées.
     Compatible PostgreSQL et SQLite.
     """
     if not transactions:
-        return
+        return 0
 
+    inserted = 0
     conn = get_connection()
     try:
         cur = conn.cursor()
@@ -130,6 +132,7 @@ def insert_transactions(transactions: list[dict]):
                     t.get('categorie', 'Unknown'),
                     1 if t.get('corrige_manuellement') else 0
                 ))
+                inserted += cur.rowcount
         else:
             for t in transactions:
                 cur.execute("""
@@ -142,10 +145,13 @@ def insert_transactions(transactions: list[dict]):
                     t.get('categorie', 'Unknown'),
                     1 if t.get('corrige_manuellement') else 0
                 ))
+                inserted += cur.rowcount
 
         conn.commit()
     finally:
         conn.close()
+
+    return inserted
 
 
 # ─────────────────────────────────────────────

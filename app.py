@@ -155,10 +155,10 @@ def save_to_db(session_id):
     with open(session_file, "r", encoding="utf-8") as f:
         transactions = json.load(f)
 
-    insert_transactions(transactions)
+    inserted = insert_transactions(transactions)
     os.remove(session_file)
 
-    return jsonify({"success": True, "saved": len(transactions)})
+    return jsonify({"success": True, "saved": inserted})
 
 
 # ─────────────────────────────────────────────
