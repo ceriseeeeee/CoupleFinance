@@ -43,6 +43,8 @@ def dashboard():
     mois_selectionne = request.args.get("mois", mois_dispo[0] if mois_dispo else None)
     personne_filtre = request.args.get("personne") or None
     page_active = request.args.get("page", "overview")
+    if page_active not in ("overview", "transactions", "budget", "savings"):
+        page_active = "overview"
     stats = get_stats(mois=mois_selectionne, personne=personne_filtre) if mois_dispo else {}
     transactions = get_transactions(mois=mois_selectionne, personne=personne_filtre) if mois_dispo else []
     return render_template("dashboard.html",
