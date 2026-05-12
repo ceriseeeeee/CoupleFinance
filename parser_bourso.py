@@ -19,8 +19,8 @@ Format des lignes à capturer :
 
 import pdfplumber
 import re
-import uuid
 from datetime import datetime
+from utils import make_transaction_id
 
 
 # Patterns de lignes à ignorer (en-têtes, pieds de page, lignes de bilan)
@@ -180,13 +180,14 @@ def try_parse_line(line: str, personne: str) -> dict | None:
 
     # ── Détection débit/crédit ──
     type_op = detect_type(middle)
+    libelle_clean = clean_libelle_bourso(middle)
 
     return {
-        "id": str(uuid.uuid4()),
+        "id": make_transaction_id(date.strftime("%Y-%m-%d"), libelle_clean, montant, personne, "BoursoBank"),
         "date": date.strftime("%Y-%m-%d"),
         "mois": date.strftime("%Y-%m"),
         "libelle": middle,
-        "libelle_clean": clean_libelle_bourso(middle),
+        "libelle_clean": libelle_clean,
         "montant": montant,
         "type": type_op,
         "personne": personne,

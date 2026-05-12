@@ -18,9 +18,9 @@ Particularités :
 
 import pdfplumber
 import re
-import uuid
 from collections import defaultdict
 from datetime import datetime
+from utils import make_transaction_id
 
 
 # Lignes à ignorer
@@ -188,7 +188,7 @@ def try_parse_bnp_line(line: str, personne: str, annee: int) -> dict | None:
     libelle_clean = clean_libelle_bnp(middle)
 
     return {
-        "id": str(uuid.uuid4()),
+        "id": make_transaction_id(date.strftime("%Y-%m-%d"), libelle_clean, montant, personne, "BNP Paribas"),
         "date": date.strftime("%Y-%m-%d"),
         "mois": date.strftime("%Y-%m"),
         "libelle": middle,

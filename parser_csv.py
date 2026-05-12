@@ -7,10 +7,10 @@ Détection automatique du format selon les colonnes du fichier.
 """
 
 import csv
-import uuid
 import re
 from datetime import datetime
 from io import StringIO
+from utils import make_transaction_id
 
 
 def detect_csv_bank(content: str) -> str:
@@ -102,7 +102,7 @@ def parse_bourso_csv(content: str, personne: str) -> list[dict]:
             libelle_clean = nom_marchand if nom_marchand else clean_libelle_bourso_csv(libelle_brut)
 
             transactions.append({
-                "id": str(uuid.uuid4()),
+                "id": make_transaction_id(date.strftime("%Y-%m-%d"), libelle_clean, round(montant, 2), personne, "BoursoBank"),
                 "date": date.strftime("%Y-%m-%d"),
                 "mois": date.strftime("%Y-%m"),
                 "libelle": libelle_brut,
@@ -172,7 +172,7 @@ def parse_bnp_csv(content: str, personne: str) -> list[dict]:
             libelle_clean = clean_libelle_bnp_csv(libelle)
 
             transactions.append({
-                "id": str(uuid.uuid4()),
+                "id": make_transaction_id(date.strftime("%Y-%m-%d"), libelle_clean, round(montant, 2), personne, "BNP Paribas"),
                 "date": date.strftime("%Y-%m-%d"),
                 "mois": date.strftime("%Y-%m"),
                 "libelle": libelle,
@@ -288,7 +288,7 @@ def parse_traderepublic_csv(content: str, personne: str) -> list[dict]:
             libelle_clean = clean_libelle_tr(libelle, description, tr_type)
 
             transactions.append({
-                "id": str(uuid.uuid4()),
+                "id": make_transaction_id(date.strftime("%Y-%m-%d"), libelle_clean, round(montant, 2), personne, "Trade Republic"),
                 "date": date.strftime("%Y-%m-%d"),
                 "mois": date.strftime("%Y-%m"),
                 "libelle": description or libelle,
