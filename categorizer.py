@@ -216,18 +216,18 @@ def load_user_mapping() -> dict:
             conn = psycopg2.connect(database_url)
             cur = conn.cursor()
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS user_mapping (
+                CREATE TABLE IF NOT EXISTS category_corrections (
                     libelle_key TEXT PRIMARY KEY,
                     categorie TEXT NOT NULL
                 )
             """)
             conn.commit()
-            cur.execute("SELECT libelle_key, categorie FROM user_mapping")
+            cur.execute("SELECT libelle_key, categorie FROM category_corrections")
             rows = cur.fetchall()
             conn.close()
             return {r[0]: r[1] for r in rows}
         except Exception as e:
-            print(f"[user_mapping] Erreur: {e}")
+            print(f"[category_corrections] Erreur: {e}")
             return {}
     else:
         os.makedirs("data", exist_ok=True)
@@ -249,20 +249,20 @@ def save_user_correction(libelle: str, categorie: str):
             conn = psycopg2.connect(database_url)
             cur = conn.cursor()
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS user_mapping (
+                CREATE TABLE IF NOT EXISTS category_corrections (
                     libelle_key TEXT PRIMARY KEY,
                     categorie TEXT NOT NULL
                 )
             """)
             cur.execute("""
-                INSERT INTO user_mapping (libelle_key, categorie)
+                INSERT INTO category_corrections (libelle_key, categorie)
                 VALUES (%s, %s)
                 ON CONFLICT (libelle_key) DO UPDATE SET categorie = EXCLUDED.categorie
             """, (key, categorie))
             conn.commit()
             conn.close()
         except Exception as e:
-            print(f"[user_mapping] Erreur sauvegarde: {e}")
+            print(f"[category_corrections] Erreur sauvegarde: {e}")
     else:
         os.makedirs("data", exist_ok=True)
         mapping = {}
