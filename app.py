@@ -72,12 +72,9 @@ def import_page():
 def upload():
     files = request.files.getlist("pdfs")
     personne = request.form.get("personne")
-
     if not files or not personne:
         return jsonify({"error": "Fichiers ou personne manquants"}), 400
-
-    result = process_upload(files, personne)
-    status = 400 if "error" in result else 200
+    result, status = process_upload(files, personne)
     return jsonify(result), status
 
 
