@@ -40,7 +40,7 @@ init_db()
 def dashboard():
     """Page dashboard avec graphiques et KPIs."""
     mois_dispo = get_mois_disponibles()
-    mois_selectionne = request.args.get("mois", mois_dispo[0] if mois_dispo else None)
+    mois_selectionne = request.args.get("mois") or None
     personne_filtre = request.args.get("personne") or None
     page_active = request.args.get("page", "overview")
     if page_active not in ("overview", "transactions", "budget", "savings"):
