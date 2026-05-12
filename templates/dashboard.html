@@ -461,16 +461,16 @@
   <div class="logo-sub">Tableau de bord financier</div>
 
   <div class="nav-section">Menu</div>
-  <a class="nav-item active" onclick="showPage('overview')" href="#">
+  <a class="nav-item {{ 'active' if page_active == 'overview' }}" onclick="showPage('overview')" href="#">
     <span class="ni">◈</span> Overview
   </a>
-  <a class="nav-item" onclick="showPage('transactions')" href="#">
+  <a class="nav-item {{ 'active' if page_active == 'transactions' }}" onclick="showPage('transactions')" href="#">
     <span class="ni">≡</span> Transactions
   </a>
-  <a class="nav-item" onclick="showPage('budget')" href="#">
+  <a class="nav-item {{ 'active' if page_active == 'budget' }}" onclick="showPage('budget')" href="#">
     <span class="ni">◎</span> Budget
   </a>
-  <a class="nav-item" onclick="showPage('savings')" href="#">
+  <a class="nav-item {{ 'active' if page_active == 'savings' }}" onclick="showPage('savings')" href="#">
     <span class="ni">◇</span> Savings
   </a>
 
@@ -486,7 +486,7 @@
 <main class="main">
 
   <!-- ─── OVERVIEW ─── -->
-  <div class="page active" id="page-overview">
+  <div class="page {{ 'active' if page_active == 'overview' }}" id="page-overview">
     <div class="hero">
       <div class="hero-text">
         <h1>Welcome back, Cerise & Loïc !</h1>
@@ -583,7 +583,7 @@
   </div>
 
   <!-- ─── TRANSACTIONS ─── -->
-  <div class="page" id="page-transactions">
+  <div class="page {{ 'active' if page_active == 'transactions' }}" id="page-transactions">
     <div class="hero" style="background:var(--dark2);">
       <div class="hero-text">
         <h1>Transactions</h1>
@@ -654,7 +654,7 @@
   </div>
 
   <!-- ─── BUDGET ─── -->
-  <div class="page" id="page-budget">
+  <div class="page {{ 'active' if page_active == 'budget' }}" id="page-budget">
     <div class="hero" style="background:#0F4C35;">
       <div class="hero-text">
         <h1>Budget</h1>
@@ -743,7 +743,7 @@
   </div>
 
   <!-- ─── SAVINGS ─── -->
-  <div class="page" id="page-savings">
+  <div class="page {{ 'active' if page_active == 'savings' }}" id="page-savings">
     <div class="hero" style="background:#1A1A2E;">
       <div class="hero-text">
         <h1>Savings</h1>
@@ -861,16 +861,6 @@ function applyFilters() {
   window.location.href = '/?' + params.toString();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  const params = new URLSearchParams(window.location.search);
-  const page = params.get('page');
-  if (page) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + page)?.classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelector(`.nav-item[onclick*="${page}"]`)?.classList.add('active');
-  }
-});
 
 // ══════════════════════════════════════
 //  DONNÉES INJECTÉES PAR FLASK
