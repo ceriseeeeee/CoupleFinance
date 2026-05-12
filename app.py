@@ -15,9 +15,8 @@ from flask import Flask, render_template, request, jsonify, session
 import os, json, uuid
 from datetime import datetime
 
-from parser_bourso import parse_bourso_pdf
-from parser_bnp import parse_bnp_pdf
-from categorizer import categorize_transactions, save_user_correction
+from categorizer import save_user_correction
+from upload_service import process_upload
 from database import init_db, insert_transactions, update_categorie, get_stats, get_mois_disponibles, get_transactions
 
 app = Flask(__name__)
@@ -77,63 +76,9 @@ def upload():
     if not files or not personne:
         return jsonify({"error": "Fichiers ou personne manquants"}), 400
 
-    all_transactions = []
-
-    for file in files:
-        filename = f"{uuid.uuid4()}_{file.filename}"
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(filepath)
-
-        if file.filename.lower().endswith(".csv"):
-            from parser_csv import parse_csv
-            transactions = parse_csv(filepath, personne)
-        elif file.filename.lower().endswith(".pdf"):
-            banque = detect_bank(filepath)
-            if banque == "bourso":
-                transactions = parse_bourso_pdf(filepath, personne)
-            elif banque == "bnp":
-                transactions = parse_bnp_pdf(filepath, personne)
-            else:
-                os.remove(filepath)
-                continue
-        else:
-            os.remove(filepath)
-            continue
-
-        all_transactions.extend(transactions)
-        os.remove(filepath)
-
-    if not all_transactions:
-        return jsonify({"error": "Aucune transaction extraite"}), 400
-
-    all_transactions = categorize_transactions(all_transactions)
-
-    # Stockage session temporaire pour la validation
-    session_id = str(uuid.uuid4())
-    session_file = os.path.join(SESSION_FOLDER, f"session_{session_id}.json")
-    with open(session_file, "w", encoding="utf-8") as f:
-        json.dump(all_transactions, f, ensure_ascii=False, indent=2)
-
-    return jsonify({
-        "success": True,
-        "session_id": session_id,
-        "count": len(all_transactions),
-        "unknown_count": sum(1 for t in all_transactions if t["categorie"] == "Unknown")
-    })
-
-
-def detect_bank(filepath: str) -> str:
-    import pdfplumber
-    try:
-        with pdfplumber.open(filepath) as pdf:
-            text = pdf.pages[0].extract_text() or ""
-            if "BoursoBank" in text or "Boursorama" in text:
-                return "bourso"
-            elif "BNP PARIBAS" in text or "RELEVE DE COMPTE" in text or "RELEVEDECOMPTE" in text or "BNPAFRPPXXX" in text:
-                return "bnp"
-    except Exception:
-        pass
-    return "unknown"
+    result = process_upload(files, personne)
+    status = 400 if "error" in result else 200
+    return jsonify(result), status
 
 
 # ─────────────────────────────────────────────
