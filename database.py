@@ -114,6 +114,8 @@ def init_db():
                 )
             """)
 
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at)")
+
         conn.commit()
     finally:
         conn.close()
