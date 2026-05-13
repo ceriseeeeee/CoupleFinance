@@ -158,7 +158,8 @@ def save_to_db(session_id):
     inserted = insert_transactions(transactions)
     os.remove(session_file)
 
-    return jsonify({"success": True, "saved": inserted})
+    doublons = len(transactions) - inserted
+    return jsonify({"success": True, "saved": inserted, "doublons": doublons})
 
 
 # ─────────────────────────────────────────────

@@ -142,10 +142,18 @@
       padding: 10px 18px; border-radius: var(--radius-sm);
       font-size: .85rem; opacity: 0; transform: translateY(8px);
       transition: all .3s; pointer-events: none; z-index: 999;
+      display: flex; align-items: center; gap: 8px;
     }
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.success { background: var(--green-dim); }
     #toast.error { background: var(--red); }
+    #toast.info { background: #3B82F6; }
+    .tbadge {
+      display: inline-block; padding: 3px 10px; border-radius: 5px;
+      font-size: .82rem; font-weight: 600; white-space: nowrap;
+    }
+    .tbadge.green { background: var(--green-dim); color: #fff; }
+    .tbadge.blue  { background: #3B82F6; color: #fff; }
   </style>
 </head>
 <body>
@@ -306,8 +314,24 @@
         const res = await fetch(`/api/save/${SESSION_ID}`, { method: 'POST' });
         const data = await res.json();
         if (data.success) {
-          showToast(`✓ ${data.saved} transactions sauvegardées !`, 'success');
-          setTimeout(() => window.location.href = '/', 1500);
+          const saved    = data.saved    ?? 0;
+          const doublons = data.doublons ?? 0;
+          let html, type;
+
+          if (saved > 0 && doublons > 0) {
+            html = `<span class="tbadge green">✓ ${saved} nouvelle${saved > 1 ? 's' : ''} transaction${saved > 1 ? 's' : ''} ajoutée${saved > 1 ? 's' : ''}</span>`
+                 + `<span class="tbadge blue">${doublons} doublon${doublons > 1 ? 's' : ''} ignoré${doublons > 1 ? 's' : ''}</span>`;
+            type = '';
+          } else if (saved === 0) {
+            html = `<span class="tbadge blue">0 nouvelle transaction ajoutée · ${doublons} doublon${doublons > 1 ? 's' : ''} ignoré${doublons > 1 ? 's' : ''}</span>`;
+            type = 'info';
+          } else {
+            html = `✓ ${saved} transaction${saved > 1 ? 's' : ''} sauvegardée${saved > 1 ? 's' : ''}`;
+            type = 'success';
+          }
+
+          showToastHTML(html, type);
+          if (saved > 0) setTimeout(() => window.location.href = '/', 2000);
         } else {
           showToast('Erreur', 'error');
         }
@@ -319,6 +343,13 @@
       t.textContent = msg;
       t.className = `show ${type}`;
       setTimeout(() => t.className = '', 2500);
+    }
+
+    function showToastHTML(html, type = '') {
+      const t = document.getElementById('toast');
+      t.innerHTML = html;
+      t.className = ('show ' + type).trim();
+      setTimeout(() => t.className = '', 3000);
     }
   </script>
 </body>
