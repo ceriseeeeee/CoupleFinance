@@ -11,21 +11,21 @@ Routes :
   GET  /api/transactions → Transactions JSON filtrées
 """
 
-from flask import Flask, render_template, request, jsonify, session
-import os, json, uuid
+from flask import Flask, render_template, request, jsonify
+import os
 from datetime import datetime
 
 from categorizer import save_user_correction
 from upload_service import process_upload
-from database import init_db, insert_transactions, update_categorie, get_stats, get_mois_disponibles, get_transactions
+from database import (init_db, insert_transactions, update_categorie,
+                      get_stats, get_mois_disponibles, get_transactions,
+                      save_session, get_session, update_session, delete_session)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "couplefinance-2026")
 
 UPLOAD_FOLDER = "uploads"
-SESSION_FOLDER = "data"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(SESSION_FOLDER, exist_ok=True)
 
 # Init de la base au démarrage
 init_db()
@@ -84,12 +84,9 @@ def upload():
 
 @app.route("/validate/<session_id>")
 def validate(session_id):
-    session_file = os.path.join(SESSION_FOLDER, f"session_{session_id}.json")
-    if not os.path.exists(session_file):
+    transactions = get_session(session_id)
+    if transactions is None:
         return "Session introuvable", 404
-
-    with open(session_file, "r", encoding="utf-8") as f:
-        transactions = json.load(f)
 
     stats = {
         "total": len(transactions),
@@ -116,18 +113,14 @@ def correct():
 
     # Mise à jour dans la session temporaire
     if session_id:
-        session_file = os.path.join(SESSION_FOLDER, f"session_{session_id}.json")
-        if os.path.exists(session_file):
-            with open(session_file, "r", encoding="utf-8") as f:
-                transactions = json.load(f)
+        transactions = get_session(session_id)
+        if transactions is not None:
             for t in transactions:
                 if t["id"] == transaction_id:
-                    save_user_correction(t["libelle"], new_category)
                     t["categorie"] = new_category
                     t["corrige_manuellement"] = True
                     break
-            with open(session_file, "w", encoding="utf-8") as f:
-                json.dump(transactions, f, ensure_ascii=False, indent=2)
+            update_session(session_id, transactions)
 
     # Mise à jour en base si déjà sauvegardé
     update_categorie(transaction_id, new_category)
@@ -148,15 +141,12 @@ def correct():
 @app.route("/api/save/<session_id>", methods=["POST"])
 def save_to_db(session_id):
     """Sauvegarde les transactions validées en base et supprime la session."""
-    session_file = os.path.join(SESSION_FOLDER, f"session_{session_id}.json")
-    if not os.path.exists(session_file):
+    transactions = get_session(session_id)
+    if transactions is None:
         return jsonify({"error": "Session introuvable"}), 404
 
-    with open(session_file, "r", encoding="utf-8") as f:
-        transactions = json.load(f)
-
     inserted = insert_transactions(transactions)
-    os.remove(session_file)
+    delete_session(session_id)
 
     doublons = len(transactions) - inserted
     return jsonify({"success": True, "saved": inserted, "doublons": doublons})

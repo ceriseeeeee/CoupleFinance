@@ -1,5 +1,4 @@
 import os
-import json
 import uuid
 from werkzeug.utils import secure_filename
 
@@ -7,9 +6,9 @@ from parser_bourso import parse_bourso_pdf
 from parser_bnp import parse_bnp_pdf
 from parser_csv import parse_csv
 from categorizer import categorize_transactions
+from database import save_session
 
 UPLOAD_FOLDER = "uploads"
-SESSION_FOLDER = "data"
 
 
 def detect_bank(filepath: str) -> str:
@@ -75,10 +74,7 @@ def process_upload(files, personne: str) -> tuple[dict, int]:
     all_transactions = categorize_transactions(all_transactions)
 
     session_id = str(uuid.uuid4())
-    session_file = os.path.join(SESSION_FOLDER, f"session_{session_id}.json")
-
-    with open(session_file, "w", encoding="utf-8") as f:
-        json.dump(all_transactions, f, ensure_ascii=False, indent=2)
+    save_session(session_id, all_transactions)
 
     return {
         "success": True,

@@ -9,6 +9,7 @@ Variables d'environnement :
 """
 
 import os
+import json
 import uuid
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
@@ -96,6 +97,23 @@ def init_db():
                 )
             """)
 
+        if is_postgres():
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS sessions (
+                    session_id TEXT PRIMARY KEY,
+                    transactions JSONB NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """)
+        else:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS sessions (
+                    session_id TEXT PRIMARY KEY,
+                    transactions TEXT NOT NULL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
         conn.commit()
     finally:
         conn.close()
@@ -152,6 +170,76 @@ def insert_transactions(transactions: list[dict]) -> int:
         conn.close()
 
     return inserted
+
+
+# ─────────────────────────────────────────────
+#  SESSIONS (stockage temporaire avant validation)
+# ─────────────────────────────────────────────
+
+def save_session(session_id: str, transactions: list):
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        if is_postgres():
+            import psycopg2.extras
+            cur.execute("""
+                INSERT INTO sessions (session_id, transactions)
+                VALUES (%s, %s)
+                ON CONFLICT (session_id) DO UPDATE SET transactions = EXCLUDED.transactions
+            """, (session_id, psycopg2.extras.Json(transactions)))
+        else:
+            cur.execute("""
+                INSERT OR REPLACE INTO sessions (session_id, transactions) VALUES (?, ?)
+            """, (session_id, json.dumps(transactions, ensure_ascii=False)))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_session(session_id: str):
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        p = '%s' if is_postgres() else '?'
+        cur.execute(f"SELECT transactions FROM sessions WHERE session_id = {p}", (session_id,))
+        row = cur.fetchone()
+        if row is None:
+            return None
+        # psycopg2 désérialise JSONB automatiquement ; SQLite retourne TEXT
+        return row[0] if is_postgres() else json.loads(row[0])
+    finally:
+        conn.close()
+
+
+def update_session(session_id: str, transactions: list):
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        if is_postgres():
+            import psycopg2.extras
+            cur.execute(
+                "UPDATE sessions SET transactions = %s WHERE session_id = %s",
+                (psycopg2.extras.Json(transactions), session_id)
+            )
+        else:
+            cur.execute(
+                "UPDATE sessions SET transactions = ? WHERE session_id = ?",
+                (json.dumps(transactions, ensure_ascii=False), session_id)
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_session(session_id: str):
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        p = '%s' if is_postgres() else '?'
+        cur.execute(f"DELETE FROM sessions WHERE session_id = {p}", (session_id,))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 # ─────────────────────────────────────────────
