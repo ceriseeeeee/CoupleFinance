@@ -15,7 +15,7 @@ from flask import Flask, render_template, request, jsonify
 import os
 from datetime import datetime
 
-from categorizer import save_user_correction
+from categorizer import save_user_correction, ALL_CATEGORIES
 from upload_service import process_upload
 from database import (init_db, insert_transactions, update_categorie,
                       get_stats, get_mois_disponibles, get_transactions,
@@ -110,6 +110,8 @@ def correct():
     session_id = data.get("session_id")
     transaction_id = data.get("transaction_id")
     new_category = data.get("categorie")
+    if new_category not in ALL_CATEGORIES:
+        return jsonify({"error": "Catégorie invalide"}), 400
 
     # Mise à jour dans la session temporaire
     if session_id:
@@ -126,7 +128,6 @@ def correct():
     update_categorie(transaction_id, new_category)
 
     if new_category != "Unknown":
-        from categorizer import save_user_correction
         libelle = data.get("libelle", "")
         if libelle:
             save_user_correction(libelle, new_category)

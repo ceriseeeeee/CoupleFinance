@@ -1001,7 +1001,8 @@ function updateTxnTable(transactions) {
               data-type="${esc(t.type)}"
               data-cat="${esc(t.categorie)}"
               data-personne="${esc((t.personne || '').toLowerCase())}"
-              data-id="${esc(t.id)}">
+              data-id="${esc(t.id)}"
+              data-libelle="${esc(t.libelle_clean || t.libelle)}">
       <td style="color:var(--muted)">${esc(t.date)}</td>
       <td style="font-weight:500">${libelle}</td>
       <td>${buildCatSelect(t.id, t.categorie)}</td>
@@ -1189,7 +1190,7 @@ async function correctDashboard(transactionId, newCategory, selectEl) {
       body: JSON.stringify({
         transaction_id: transactionId,
         categorie: newCategory,
-        libelle: selectEl.closest('tr').querySelector('td:nth-child(2)').textContent.trim()
+        libelle: selectEl.closest('tr').dataset.libelle
       })
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
