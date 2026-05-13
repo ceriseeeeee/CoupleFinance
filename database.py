@@ -336,6 +336,16 @@ def get_stats(mois: str = None, personne: str = None) -> dict:
         else:
             par_personne[p]['revenus'] += t['montant']
 
+    par_personne_categorie = {}
+    for t in debits:
+        personne_t = t['personne']
+        categorie = t['categorie'] or 'Unknown'
+        if personne_t not in par_personne_categorie:
+            par_personne_categorie[personne_t] = {}
+        par_personne_categorie[personne_t][categorie] = (
+            par_personne_categorie[personne_t].get(categorie, 0) + t['montant']
+        )
+
     # Évolution mensuelle
     conn = get_connection()
     try:
@@ -367,6 +377,10 @@ def get_stats(mois: str = None, personne: str = None) -> dict:
         'nb_unknown':         sum(1 for t in transactions if t['categorie'] == 'Unknown'),
         'par_categorie':      {k: round(v, 2) for k, v in par_categorie.items()},
         'par_personne':       {k: {kk: round(vv, 2) for kk, vv in v.items()} for k, v in par_personne.items()},
+        'par_personne_categorie': {
+            personne: {cat: round(m, 2) for cat, m in cats.items()}
+            for personne, cats in par_personne_categorie.items()
+        },
         'evolution_mensuelle': evolution,
         'top_depenses':       top_depenses,
     }

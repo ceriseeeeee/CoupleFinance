@@ -951,7 +951,7 @@ function updateCharts(stats) {
       data: {
         labels: cats6,
         datasets: personnes.map((p, i) => ({
-          label: p, data: cats6.map(() => Math.round(Math.random() * 300 + 50)),
+          label: p, data: cats6.map(cat => ((stats.par_personne_categorie || {})[p] || {})[cat] || 0),
           backgroundColor: PALETTE[i], borderRadius: 4
         }))
       },
