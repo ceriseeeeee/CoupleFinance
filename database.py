@@ -70,7 +70,8 @@ def init_db():
                 personne TEXT NOT NULL,
                 banque TEXT,
                 categorie TEXT DEFAULT 'Unknown',
-                corrige_manuellement INTEGER DEFAULT 0
+                corrige_manuellement INTEGER DEFAULT 0,
+                type_depense TEXT DEFAULT 'commune'
             )
         """)
         cur.execute("CREATE INDEX IF NOT EXISTS idx_mois ON transactions(mois)")
@@ -116,6 +117,17 @@ def init_db():
 
         cur.execute("CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at)")
 
+        # Migration : ajout de type_depense sur les tables existantes
+        if is_postgres():
+            cur.execute("""
+                ALTER TABLE transactions ADD COLUMN IF NOT EXISTS type_depense TEXT DEFAULT 'commune'
+            """)
+        else:
+            try:
+                cur.execute("ALTER TABLE transactions ADD COLUMN type_depense TEXT DEFAULT 'commune'")
+            except Exception:
+                pass  # colonne déjà présente
+
         conn.commit()
     finally:
         conn.close()
@@ -143,27 +155,29 @@ def insert_transactions(transactions: list[dict]) -> int:
             for t in transactions:
                 cur.execute("""
                     INSERT INTO transactions
-                    (id, date, mois, libelle, libelle_clean, montant, type, personne, banque, categorie, corrige_manuellement)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (id, date, mois, libelle, libelle_clean, montant, type, personne, banque, categorie, corrige_manuellement, type_depense)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (id) DO NOTHING
                 """, (
                     t['id'], t['date'], t['mois'], t.get('libelle'), t.get('libelle_clean'),
                     t['montant'], t['type'], t['personne'], t.get('banque'),
                     t.get('categorie', 'Unknown'),
-                    1 if t.get('corrige_manuellement') else 0
+                    1 if t.get('corrige_manuellement') else 0,
+                    t.get('type_depense', 'commune')
                 ))
                 inserted += cur.rowcount
         else:
             for t in transactions:
                 cur.execute("""
                     INSERT OR IGNORE INTO transactions
-                    (id, date, mois, libelle, libelle_clean, montant, type, personne, banque, categorie, corrige_manuellement)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (id, date, mois, libelle, libelle_clean, montant, type, personne, banque, categorie, corrige_manuellement, type_depense)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     t['id'], t['date'], t['mois'], t.get('libelle'), t.get('libelle_clean'),
                     t['montant'], t['type'], t['personne'], t.get('banque'),
                     t.get('categorie', 'Unknown'),
-                    1 if t.get('corrige_manuellement') else 0
+                    1 if t.get('corrige_manuellement') else 0,
+                    t.get('type_depense', 'commune')
                 ))
                 inserted += cur.rowcount
 
