@@ -262,17 +262,24 @@ def delete_session(session_id: str):
 #  UPDATE
 # ─────────────────────────────────────────────
 
-def update_categorie(transaction_id: str, categorie: str):
-    """Met à jour la catégorie d'une transaction."""
+def update_categorie(transaction_id: str, categorie: str, type_depense: str = None):
+    """Met à jour la catégorie (et optionnellement type_depense) d'une transaction."""
     conn = get_connection()
     try:
         cur = conn.cursor()
         p = '%s' if is_postgres() else '?'
-        cur.execute(f"""
-            UPDATE transactions
-            SET categorie = {p}, corrige_manuellement = 1
-            WHERE id = {p}
-        """, (categorie, transaction_id))
+        if type_depense is not None:
+            cur.execute(f"""
+                UPDATE transactions
+                SET categorie = {p}, corrige_manuellement = 1, type_depense = {p}
+                WHERE id = {p}
+            """, (categorie, type_depense, transaction_id))
+        else:
+            cur.execute(f"""
+                UPDATE transactions
+                SET categorie = {p}, corrige_manuellement = 1
+                WHERE id = {p}
+            """, (categorie, transaction_id))
         conn.commit()
     finally:
         conn.close()

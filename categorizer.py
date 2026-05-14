@@ -18,6 +18,15 @@ USER_MAPPING_FILE = os.path.join("data", "user_mapping.json")
 #  CATÉGORIES DISPONIBLES
 # ─────────────────────────────────────────────
 
+CATEGORIES_COMMUNES = {
+    "Loyer", "Appartement", "Électricité", "Bénin Voyage", "Voyage Couple", "Épargne"
+}
+
+CATEGORIES_PERSO = {
+    "Transport", "Shopping", "Abonnements", "Courses & Alimentation",
+    "Eating out", "Santé", "Divertissements & Loisirs", "Virements", "Revenus", "Unknown"
+}
+
 ALL_CATEGORIES = [
     "Loyer",
     "Appartement",
@@ -308,4 +317,8 @@ def categorize_transactions(transactions: list[dict]) -> list[dict]:
         libelle = t.get("libelle_clean") or t.get("libelle", "")
         cat = categorize_by_keywords(libelle, user_mapping)
         t["categorie"] = cat or "Unknown"
+        if t["categorie"] in CATEGORIES_COMMUNES:
+            t["type_depense"] = "commune"
+        else:
+            t["type_depense"] = "perso"
     return transactions

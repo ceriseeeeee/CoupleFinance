@@ -110,6 +110,7 @@ def correct():
     session_id = data.get("session_id")
     transaction_id = data.get("transaction_id")
     new_category = data.get("categorie")
+    type_depense = data.get("type_depense")
     if new_category not in ALL_CATEGORIES:
         return jsonify({"error": "Catégorie invalide"}), 400
 
@@ -121,11 +122,13 @@ def correct():
                 if t["id"] == transaction_id:
                     t["categorie"] = new_category
                     t["corrige_manuellement"] = True
+                    if type_depense is not None:
+                        t["type_depense"] = type_depense
                     break
             update_session(session_id, transactions)
 
     # Mise à jour en base si déjà sauvegardé
-    update_categorie(transaction_id, new_category)
+    update_categorie(transaction_id, new_category, type_depense)
 
     if new_category != "Unknown":
         libelle = data.get("libelle", "")
