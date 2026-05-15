@@ -134,6 +134,47 @@ def init_db():
                 )
             """)
 
+        if is_postgres():
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS objectifs (
+                    id TEXT PRIMARY KEY,
+                    nom TEXT NOT NULL,
+                    emoji TEXT DEFAULT '🎯',
+                    montant_cible REAL NOT NULL,
+                    date_cible TEXT,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS contributions (
+                    id TEXT PRIMARY KEY,
+                    objectif_id TEXT NOT NULL,
+                    mois TEXT NOT NULL,
+                    montant REAL NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """)
+        else:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS objectifs (
+                    id TEXT PRIMARY KEY,
+                    nom TEXT NOT NULL,
+                    emoji TEXT DEFAULT '🎯',
+                    montant_cible REAL NOT NULL,
+                    date_cible TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS contributions (
+                    id TEXT PRIMARY KEY,
+                    objectif_id TEXT NOT NULL,
+                    mois TEXT NOT NULL,
+                    montant REAL NOT NULL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
         # Migration : ajout de type_depense sur les tables existantes
         if is_postgres():
             cur.execute("""
@@ -477,6 +518,83 @@ def save_budget(categorie: str, montant: float):
                 INSERT OR REPLACE INTO budgets (categorie, montant, updated_at)
                 VALUES (?, ?, CURRENT_TIMESTAMP)
             """, (categorie, montant))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_objectifs() -> list:
+    """Retourne les objectifs avec leur montant cumulé depuis contributions."""
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT id, nom, emoji, montant_cible, date_cible FROM objectifs ORDER BY created_at ASC")
+        rows = cur.fetchall()
+        if is_postgres():
+            objectifs = [{'id': r[0], 'nom': r[1], 'emoji': r[2], 'montant_cible': r[3], 'date_cible': r[4]} for r in rows]
+        else:
+            objectifs = [dict(r) for r in rows]
+
+        for obj in objectifs:
+            p = '%s' if is_postgres() else '?'
+            cur.execute(f"SELECT COALESCE(SUM(montant), 0) FROM contributions WHERE objectif_id = {p}", (obj['id'],))
+            row = cur.fetchone()
+            obj['montant_cumule'] = round(float(row[0]), 2)
+    finally:
+        conn.close()
+    return objectifs
+
+
+def save_objectif(id: str, nom: str, emoji: str, montant_cible: float, date_cible: str = None):
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        if is_postgres():
+            cur.execute("""
+                INSERT INTO objectifs (id, nom, emoji, montant_cible, date_cible)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (id) DO UPDATE
+                SET nom = EXCLUDED.nom, emoji = EXCLUDED.emoji,
+                    montant_cible = EXCLUDED.montant_cible, date_cible = EXCLUDED.date_cible
+            """, (id, nom, emoji, montant_cible, date_cible))
+        else:
+            cur.execute("""
+                INSERT OR REPLACE INTO objectifs (id, nom, emoji, montant_cible, date_cible)
+                VALUES (?, ?, ?, ?, ?)
+            """, (id, nom, emoji, montant_cible, date_cible))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_objectif(id: str):
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        p = '%s' if is_postgres() else '?'
+        cur.execute(f"DELETE FROM contributions WHERE objectif_id = {p}", (id,))
+        cur.execute(f"DELETE FROM objectifs WHERE id = {p}", (id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def save_contribution(objectif_id: str, mois: str, montant: float):
+    contrib_id = str(uuid.uuid4())
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        if is_postgres():
+            cur.execute("""
+                INSERT INTO contributions (id, objectif_id, mois, montant)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (id) DO NOTHING
+            """, (contrib_id, objectif_id, mois, montant))
+        else:
+            cur.execute("""
+                INSERT INTO contributions (id, objectif_id, mois, montant)
+                VALUES (?, ?, ?, ?)
+            """, (contrib_id, objectif_id, mois, montant))
         conn.commit()
     finally:
         conn.close()

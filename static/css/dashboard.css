@@ -416,36 +416,80 @@ body {
 /* ══════════════════════════════════════
    SAVINGS PAGE
 ══════════════════════════════════════ */
-.savings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+.sav-kpi-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.objectifs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.goal-empty {
+  grid-column: 1/-1;
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted);
+  font-size: .92rem;
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
 
 .goal-card {
   background: var(--white);
   border-radius: var(--radius);
-  padding: 28px 32px;
+  padding: 24px 28px;
   box-shadow: var(--shadow);
+  transition: transform .2s, box-shadow .2s;
 }
+
+.goal-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(28,28,30,.09); }
 
 .goal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   margin-bottom: 16px;
 }
 
-.goal-illo { font-size: 1.8rem; }
+.goal-illo { font-size: 1.8rem; line-height: 1; }
 
-.goal-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; font-weight: 400; }
-.goal-sub { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.goal-title { font-family: 'DM Serif Display', serif; font-size: 1.05rem; font-weight: 400; }
+.goal-sub { font-size: .74rem; color: var(--muted); margin-top: 3px; }
+
+.goal-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.goal-btn-edit, .goal-btn-del {
+  background: none;
+  border: none;
+  font-size: .85rem;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s;
+  line-height: 1;
+}
+.goal-btn-edit:hover { background: var(--bg); }
+.goal-btn-del:hover  { background: #FAE8E8; }
 
 .goal-amount {
   font-family: 'DM Serif Display', serif;
-  font-size: 1.8rem;
+  font-size: 1.75rem;
   font-weight: 400;
   color: var(--green);
   margin-bottom: 4px;
 }
 
-.goal-target { font-size: .78rem; color: var(--muted); margin-bottom: 14px; }
+.goal-target { font-size: .77rem; color: var(--muted); margin-bottom: 14px; }
 
 .goal-bar-track {
   height: 7px;
@@ -462,7 +506,37 @@ body {
   transition: width .8s ease;
 }
 
-.goal-pct { font-size: .75rem; color: var(--muted); }
+.goal-pct { font-size: .74rem; color: var(--muted); }
+
+.btn-add-objectif {
+  padding: 8px 16px;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .2s;
+  white-space: nowrap;
+}
+.btn-add-objectif:hover { background: rgba(255,255,255,.22); }
+
+.btn-repartir {
+  padding: 8px 18px;
+  background: var(--green-lt);
+  border: 1px solid var(--green);
+  border-radius: var(--radius-sm);
+  color: var(--green-dim);
+  font-family: 'Inter', sans-serif;
+  font-size: .82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.btn-repartir:hover { background: var(--green); color: #fff; }
 
 /* ══════════════════════════════════════
    PERSONNE TOGGLE

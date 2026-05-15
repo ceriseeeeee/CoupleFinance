@@ -325,46 +325,38 @@
             <option value="Loïc" {{ 'selected' if personne_filtre == "Loïc" }}>Loïc</option>
           </select>
         </div>
+        <button class="btn-add-objectif" onclick="openObjectifEditor()">➕ Ajouter un objectif</button>
         <div class="hero-illo">⭐</div>
       </div>
     </div>
 
-    <div class="savings-grid">
-      <div class="goal-card">
-        <div class="goal-header">
-          <div class="goal-illo">🇵🇹</div>
-          <div>
-            <div class="goal-title">Vacances Portugal</div>
-            <div class="goal-sub">Lisbon + Algarve · Juin 2026</div>
-          </div>
-        </div>
-        <div class="goal-amount">420 €</div>
-        <div class="goal-target">sur 800 € objectif · 380 € restants</div>
-        <div class="goal-bar-track">
-          <div class="goal-bar-fill" style="width:52%"></div>
-        </div>
-        <div class="goal-pct">52% atteint · 5 personnes</div>
+    <div class="sav-kpi-row">
+      <div class="kpi-card amber" style="flex:1">
+        <div class="kpi-label">Épargne du mois</div>
+        <div class="kpi-val" id="sav-epargne" style="color:var(--amber)">—</div>
+        <div class="kpi-sub">Catégorie Épargne</div>
       </div>
-
-      <div class="goal-card">
-        <div class="goal-header">
-          <div class="goal-illo">💰</div>
-          <div>
-            <div class="goal-title">Épargne mensuelle</div>
-            <div class="goal-sub">Objectif : 400 € / mois</div>
-          </div>
-        </div>
-        <div class="goal-amount" id="sav-epargne">—</div>
-        <div class="goal-target">épargné ce mois</div>
-        <div class="goal-bar-track">
-          <div class="goal-bar-fill" id="sav-bar" style="width:0%"></div>
-        </div>
-        <div class="goal-pct" id="sav-pct">0% de l'objectif</div>
+      <div class="kpi-card green" style="flex:1">
+        <div class="kpi-label">Objectifs en cours</div>
+        <div class="kpi-val" id="sav-nb-objectifs" style="color:var(--green)">—</div>
+        <div class="kpi-sub">actifs</div>
+      </div>
+      <div class="kpi-card teal" style="flex:1">
+        <div class="kpi-label">Total cumulé</div>
+        <div class="kpi-val" id="sav-total-cumule" style="color:#7DBFB2">—</div>
+        <div class="kpi-sub">toutes contributions</div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">Évolution de l'épargne mensuelle</div>
+    <div id="objectifs-grid" class="objectifs-grid">
+      <div class="goal-empty">Aucun objectif pour l'instant — créez-en un !</div>
+    </div>
+
+    <div class="card" style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div class="card-title" style="margin-bottom:0">Évolution de l'épargne mensuelle</div>
+        <button class="btn-repartir" onclick="openRepartitionModal()">💰 Répartir l'épargne du mois</button>
+      </div>
       <div class="chart-wrap h200"><canvas id="chartSavings"></canvas></div>
     </div>
   </div>
@@ -381,6 +373,56 @@
     <div class="modal-footer">
       <button class="modal-btn-cancel" onclick="document.getElementById('budget-modal').style.display='none'">Annuler</button>
       <button class="modal-btn-save" onclick="saveBudgets()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<div id="objectif-modal" class="modal-overlay" onclick="closeObjectifModal(event)">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title" id="objectif-modal-title">Nouvel objectif</h2>
+      <button class="modal-close" onclick="document.getElementById('objectif-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body" style="gap:14px">
+      <input type="hidden" id="obj-id-input">
+      <div class="budget-editor-row" style="flex-direction:column;align-items:flex-start;gap:6px;border-bottom:none">
+        <label class="budget-editor-label" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Emoji</label>
+        <input id="obj-emoji-input" class="budget-editor-input" type="text" maxlength="4" value="🎯" style="width:70px;text-align:center;font-size:1.2rem">
+      </div>
+      <div class="budget-editor-row" style="flex-direction:column;align-items:flex-start;gap:6px;border-bottom:none">
+        <label class="budget-editor-label" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Nom de l'objectif</label>
+        <input id="obj-nom-input" class="budget-editor-input" type="text" placeholder="Ex. Vacances Portugal" style="width:100%">
+      </div>
+      <div class="budget-editor-row" style="flex-direction:column;align-items:flex-start;gap:6px;border-bottom:none">
+        <label class="budget-editor-label" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Montant cible (€)</label>
+        <input id="obj-montant-input" class="budget-editor-input" type="number" min="0" step="1" placeholder="Ex. 800" style="width:100%">
+      </div>
+      <div class="budget-editor-row" style="flex-direction:column;align-items:flex-start;gap:6px;border-bottom:none">
+        <label class="budget-editor-label" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Date cible (optionnel)</label>
+        <input id="obj-date-input" class="budget-editor-input" type="month" style="width:100%">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="document.getElementById('objectif-modal').style.display='none'">Annuler</button>
+      <button class="modal-btn-save" onclick="saveObjectif()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<div id="repartition-modal" class="modal-overlay" onclick="closeRepartitionModal(event)">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title">Répartir l'épargne du mois</h2>
+      <button class="modal-close" onclick="document.getElementById('repartition-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body" style="gap:12px">
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:4px">Indiquez combien vous affectez à chaque objectif ce mois :</div>
+      <div id="repartition-mois-info" style="font-size:.8rem;color:var(--green-dim);font-weight:500;margin-bottom:8px"></div>
+      <div id="repartition-rows"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="document.getElementById('repartition-modal').style.display='none'">Annuler</button>
+      <button class="modal-btn-save" onclick="saveRepartition()">Valider</button>
     </div>
   </div>
 </div>

@@ -339,23 +339,14 @@ function updateBudgetKPIs(stats) {
 }
 
 // ══════════════════════════════════════
-//  UPDATE SAVINGS
+//  UPDATE SAVINGS KPIs
 // ══════════════════════════════════════
 function updateSavings(stats) {
-  const epargne = Math.max(stats.solde || 0, 0);
-  const savPct  = Math.min(Math.round((epargne / 400) * 100), 100);
+  const parCat  = stats.par_categorie || {};
+  const epargne = parCat['Épargne'] || 0;
 
   const elAmt = document.getElementById('sav-epargne');
   if (elAmt) elAmt.textContent = Math.round(epargne) + ' €';
-
-  const elBar = document.getElementById('sav-bar');
-  if (elBar) {
-    elBar.style.width      = savPct + '%';
-    elBar.style.background = savPct < 50 ? '#F87171' : '#2ECC9A';
-  }
-
-  const elPct = document.getElementById('sav-pct');
-  if (elPct) elPct.textContent = savPct + "% de l'objectif";
 }
 
 // ══════════════════════════════════════
@@ -461,7 +452,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const mois     = document.getElementById('mois-select').value;
   const personne = document.getElementById('personne-select').value;
   await loadBudgets();
-  await loadData(mois, personne);
+  await Promise.all([loadData(mois, personne), loadObjectifs()]);
 });
 
 // ══════════════════════════════════════
@@ -616,4 +607,179 @@ function showDashToast(msg, type) {
   t.textContent = msg;
   t.className = `show ${type}`;
   setTimeout(() => t.className = '', 2000);
+}
+
+// ══════════════════════════════════════
+//  OBJECTIFS D'ÉPARGNE
+// ══════════════════════════════════════
+let _objectifs = [];
+
+async function loadObjectifs() {
+  try {
+    const res = await fetch('/api/objectifs');
+    _objectifs = await res.json();
+    renderObjectifsGrid(_objectifs);
+  } catch(e) {
+    console.error('Erreur chargement objectifs:', e);
+  }
+}
+
+function renderObjectifsGrid(objectifs) {
+  const grid = document.getElementById('objectifs-grid');
+  if (!grid) return;
+
+  const nbEl     = document.getElementById('sav-nb-objectifs');
+  const totalEl  = document.getElementById('sav-total-cumule');
+  if (nbEl)    nbEl.textContent  = objectifs.length;
+  if (totalEl) totalEl.textContent = Math.round(objectifs.reduce((s, o) => s + (o.montant_cumule || 0), 0)) + ' €';
+
+  if (!objectifs.length) {
+    grid.innerHTML = '<div class="goal-empty">Aucun objectif pour l\'instant — créez-en un !</div>';
+    return;
+  }
+
+  grid.innerHTML = objectifs.map(o => {
+    const cumule = o.montant_cumule || 0;
+    const cible  = o.montant_cible  || 1;
+    const pct    = Math.min(Math.round((cumule / cible) * 100), 100);
+    const reste  = Math.max(cible - cumule, 0);
+    const color  = pct >= 100 ? '#7DBFB2' : (pct >= 60 ? '#7C9E8A' : '#C9A96E');
+    const dateSub = o.date_cible ? ` · Objectif ${o.date_cible}` : '';
+    return `<div class="goal-card">
+      <div class="goal-header">
+        <div class="goal-illo">${esc(o.emoji || '🎯')}</div>
+        <div style="flex:1">
+          <div class="goal-title">${esc(o.nom)}</div>
+          <div class="goal-sub">${Math.round(cumule)} € cumulés${dateSub}</div>
+        </div>
+        <div class="goal-actions">
+          <button class="goal-btn-edit" onclick="openObjectifEditor('${esc(o.id)}')">✏️</button>
+          <button class="goal-btn-del"  onclick="deleteObjectif('${esc(o.id)}')">🗑</button>
+        </div>
+      </div>
+      <div class="goal-amount" style="color:${color}">${Math.round(cumule)} €</div>
+      <div class="goal-target">sur ${Math.round(cible)} € · ${Math.round(reste)} € restants</div>
+      <div class="goal-bar-track">
+        <div class="goal-bar-fill" style="width:${pct}%;background:${color}"></div>
+      </div>
+      <div class="goal-pct">${pct}% atteint</div>
+    </div>`;
+  }).join('');
+}
+
+function openObjectifEditor(id) {
+  const modal = document.getElementById('objectif-modal');
+  document.getElementById('objectif-modal-title').textContent = id ? 'Modifier l\'objectif' : 'Nouvel objectif';
+  if (id) {
+    const o = _objectifs.find(x => x.id === id);
+    if (!o) return;
+    document.getElementById('obj-id-input').value      = o.id;
+    document.getElementById('obj-emoji-input').value   = o.emoji || '🎯';
+    document.getElementById('obj-nom-input').value     = o.nom;
+    document.getElementById('obj-montant-input').value = o.montant_cible;
+    document.getElementById('obj-date-input').value    = o.date_cible || '';
+  } else {
+    document.getElementById('obj-id-input').value      = '';
+    document.getElementById('obj-emoji-input').value   = '🎯';
+    document.getElementById('obj-nom-input').value     = '';
+    document.getElementById('obj-montant-input').value = '';
+    document.getElementById('obj-date-input').value    = '';
+  }
+  modal.style.display = 'flex';
+}
+
+function closeObjectifModal(event) {
+  if (event.target === document.getElementById('objectif-modal'))
+    document.getElementById('objectif-modal').style.display = 'none';
+}
+
+async function saveObjectif() {
+  const id     = document.getElementById('obj-id-input').value.trim();
+  const emoji  = document.getElementById('obj-emoji-input').value.trim() || '🎯';
+  const nom    = document.getElementById('obj-nom-input').value.trim();
+  const montant = parseFloat(document.getElementById('obj-montant-input').value);
+  const date   = document.getElementById('obj-date-input').value || null;
+
+  if (!nom || isNaN(montant) || montant <= 0) {
+    showDashToast('Nom et montant requis', '');
+    return;
+  }
+  try {
+    const body = { nom, emoji, montant_cible: montant, date_cible: date };
+    if (id) body.id = id;
+    const res  = await fetch('/api/objectifs', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('objectif-modal').style.display = 'none';
+      await loadObjectifs();
+      showDashToast('✓ Objectif sauvegardé', 'ok');
+    } else {
+      showDashToast('Erreur sauvegarde', '');
+    }
+  } catch(e) { showDashToast('Erreur réseau', ''); }
+}
+
+async function deleteObjectif(id) {
+  if (!confirm('Supprimer cet objectif et toutes ses contributions ?')) return;
+  try {
+    const res  = await fetch(`/api/objectifs/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      await loadObjectifs();
+      showDashToast('✓ Objectif supprimé', 'ok');
+    }
+  } catch(e) { showDashToast('Erreur réseau', ''); }
+}
+
+function openRepartitionModal() {
+  if (!_objectifs.length) {
+    showDashToast('Créez d\'abord un objectif', '');
+    return;
+  }
+  const mois = document.getElementById('mois-select-sav').value || document.getElementById('mois-select').value || '';
+  const infoEl = document.getElementById('repartition-mois-info');
+  if (infoEl) infoEl.textContent = mois ? `Mois sélectionné : ${mois}` : 'Tous les mois';
+
+  document.getElementById('repartition-rows').innerHTML = _objectifs.map(o => `
+    <div class="budget-editor-row">
+      <label class="budget-editor-label">${esc(o.emoji || '🎯')} ${esc(o.nom)}</label>
+      <div class="budget-editor-field">
+        <input class="budget-editor-input" type="number" min="0" step="1" value="0"
+               data-obj-id="${esc(o.id)}" placeholder="0">
+        <span class="budget-editor-unit">€</span>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('repartition-modal').style.display = 'flex';
+}
+
+function closeRepartitionModal(event) {
+  if (event.target === document.getElementById('repartition-modal'))
+    document.getElementById('repartition-modal').style.display = 'none';
+}
+
+async function saveRepartition() {
+  const mois = document.getElementById('mois-select-sav').value || document.getElementById('mois-select').value || new Date().toISOString().slice(0,7);
+  const inputs = Array.from(document.querySelectorAll('#repartition-rows .budget-editor-input'));
+  const toSave = inputs.filter(inp => parseFloat(inp.value) > 0);
+
+  if (!toSave.length) {
+    showDashToast('Aucun montant renseigné', '');
+    return;
+  }
+  try {
+    await Promise.all(toSave.map(inp =>
+      fetch('/api/contributions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ objectif_id: inp.dataset.objId, mois, montant: parseFloat(inp.value) })
+      })
+    ));
+    document.getElementById('repartition-modal').style.display = 'none';
+    await loadObjectifs();
+    showDashToast('✓ Contributions enregistrées', 'ok');
+  } catch(e) { showDashToast('Erreur réseau', ''); }
 }

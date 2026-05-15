@@ -20,7 +20,9 @@ from upload_service import process_upload
 from database import (init_db, insert_transactions, update_categorie,
                       get_stats, get_mois_disponibles, get_transactions,
                       get_balance_couple, get_budgets, save_budget,
+                      get_objectifs, save_objectif, delete_objectif, save_contribution,
                       save_session, get_session, update_session, delete_session)
+import uuid as _uuid
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "couplefinance-2026")
@@ -191,6 +193,43 @@ def api_save_budget():
 def api_balance_couple():
     mois = request.args.get("mois") or None
     return jsonify(get_balance_couple(mois=mois))
+
+
+@app.route("/api/objectifs", methods=["GET"])
+def api_get_objectifs():
+    return jsonify(get_objectifs())
+
+
+@app.route("/api/objectifs", methods=["POST"])
+def api_save_objectif():
+    data = request.json
+    obj_id = data.get("id") or str(_uuid.uuid4())
+    nom = data.get("nom", "").strip()
+    emoji = data.get("emoji", "🎯")
+    montant_cible = data.get("montant_cible")
+    date_cible = data.get("date_cible") or None
+    if not nom or montant_cible is None:
+        return jsonify({"error": "nom et montant_cible requis"}), 400
+    save_objectif(obj_id, nom, emoji, float(montant_cible), date_cible)
+    return jsonify({"success": True, "id": obj_id})
+
+
+@app.route("/api/objectifs/<obj_id>", methods=["DELETE"])
+def api_delete_objectif(obj_id):
+    delete_objectif(obj_id)
+    return jsonify({"success": True})
+
+
+@app.route("/api/contributions", methods=["POST"])
+def api_save_contribution():
+    data = request.json
+    objectif_id = data.get("objectif_id")
+    mois = data.get("mois")
+    montant = data.get("montant")
+    if not objectif_id or not mois or montant is None:
+        return jsonify({"error": "objectif_id, mois et montant requis"}), 400
+    save_contribution(objectif_id, mois, float(montant))
+    return jsonify({"success": True})
 
 
 @app.route("/api/stats")
