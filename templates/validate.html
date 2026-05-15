@@ -5,29 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CoupleFinance — Validation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:        #F4F6F9;
+      --bg:        #F7F5F0;
       --white:     #FFFFFF;
-      --dark:      #1A1A2E;
-      --green:     #2ECC9A;
-      --green-dim: #1A9970;
-      --green-lt:  #E8F8F2;
-      --red:       #F87171;
-      --amber:     #F59E0B;
-      --border:    #E8EBF0;
-      --muted:     #9CA3AF;
-      --text:      #1A1A2E;
-      --shadow:    0 2px 12px rgba(26,26,46,.07);
-      --radius:    14px;
-      --radius-sm: 10px;
+      --dark:      #1C1C1E;
+      --green:     #7C9E8A;
+      --green-dim: #5A7A66;
+      --green-lt:  #EEF3EF;
+      --red:       #E07070;
+      --amber:     #C9A96E;
+      --border:    #EAE6DF;
+      --muted:     #A0998E;
+      --text:      #1C1C1E;
+      --shadow:    0 4px 24px rgba(28,28,30,.06);
+      --radius:    20px;
+      --radius-sm: 14px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Inter', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -36,7 +37,7 @@
     /* ── Topbar ── */
     .topbar {
       position: sticky; top: 0; z-index: 100;
-      background: var(--white); border-bottom: 1px solid var(--border);
+      background: #FDFCFA; border-bottom: 1px solid var(--border);
       padding: 14px 32px;
       display: flex; align-items: center; justify-content: space-between;
       box-shadow: var(--shadow);
@@ -44,15 +45,15 @@
 
     .topbar-left { display: flex; align-items: center; gap: 24px; }
 
-    .topbar h1 { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 600; color: var(--dark); }
+    .topbar h1 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; font-weight: 400; color: var(--dark); }
     .topbar h1 span { color: var(--green); }
 
     /* ── Stats ── */
     .stats { display: flex; gap: 20px; align-items: center; }
     .stat { text-align: center; }
-    .stat-val { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 600; color: var(--text); }
+    .stat-val { font-family: 'DM Serif Display', serif; font-size: 1.3rem; font-weight: 400; color: var(--text); }
     .stat-val.warn { color: var(--amber); }
-    .stat-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .stat-label { font-size: .66rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
 
     /* ── Progress ── */
     .prog-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
@@ -62,7 +63,7 @@
     /* ── Boutons ── */
     .btn {
       padding: 9px 18px; border: none; border-radius: var(--radius-sm);
-      font-family: 'Nunito', sans-serif; font-size: .88rem; font-weight: 600;
+      font-family: 'Inter', sans-serif; font-size: .85rem; font-weight: 500;
       cursor: pointer; transition: all .2s; text-decoration: none;
     }
     .btn-dark { background: var(--dark); color: #fff; }
@@ -80,7 +81,7 @@
     .filter-pill {
       padding: 5px 14px; border-radius: 99px; font-size: .78rem; font-weight: 500;
       border: 1px solid var(--border); background: transparent; color: var(--muted);
-      cursor: pointer; transition: all .15s;
+      cursor: pointer; transition: all .15s; font-family: 'Inter', sans-serif;
     }
     .filter-pill:hover { border-color: var(--green); color: var(--green-dim); }
     .filter-pill.on { background: var(--green-lt); border-color: var(--green); color: var(--green-dim); }
@@ -99,9 +100,9 @@
 
     thead th {
       background: var(--dark);
-      color: rgba(255,255,255,.7);
-      font-size: .72rem; text-transform: uppercase; letter-spacing: .1em;
-      font-weight: 600; padding: 12px 16px; text-align: left;
+      color: rgba(255,255,255,.6);
+      font-size: .68rem; text-transform: uppercase; letter-spacing: .12em;
+      font-weight: 500; padding: 13px 16px; text-align: left;
     }
 
     tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
@@ -109,15 +110,15 @@
     tbody tr:hover { background: var(--bg); }
     tbody tr.unknown-row { border-left: 3px solid var(--amber); }
 
-    td { padding: 10px 16px; font-size: .85rem; vertical-align: middle; }
+    td { padding: 11px 16px; font-size: .85rem; vertical-align: middle; }
 
     /* ── Badges ── */
     .badge {
-      display: inline-block; padding: 3px 8px; border-radius: 6px;
+      display: inline-block; padding: 3px 10px; border-radius: 8px;
       font-size: .72rem; font-weight: 500;
       background: var(--bg); color: var(--muted);
     }
-    .badge.unknown { background: #FEF3C7; color: #B45309; }
+    .badge.unknown { background: #FAF0DC; color: #8A6830; }
 
     /* ── Montants ── */
     .neg { color: var(--red); font-weight: 600; }
@@ -125,18 +126,18 @@
 
     /* ── Select catégorie ── */
     .cat-select {
-      padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px;
+      padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px;
       background: var(--white); color: var(--text);
-      font-family: 'Nunito', sans-serif; font-size: .8rem; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: .8rem; cursor: pointer;
       min-width: 170px; outline: none; transition: border-color .2s;
     }
     .cat-select:focus { border-color: var(--green); }
 
     /* ── Select type dépense ── */
     .type-select {
-      padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px;
+      padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px;
       background: var(--white); color: var(--text);
-      font-family: 'Nunito', sans-serif; font-size: .8rem; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: .8rem; cursor: pointer;
       min-width: 120px; outline: none; transition: border-color .2s;
     }
     .type-select:focus { border-color: var(--green); }
@@ -148,21 +149,22 @@
     #toast {
       position: fixed; bottom: 2rem; right: 2rem;
       background: var(--dark); color: #fff;
-      padding: 10px 18px; border-radius: var(--radius-sm);
+      padding: 11px 20px; border-radius: var(--radius-sm);
       font-size: .85rem; opacity: 0; transform: translateY(8px);
       transition: all .3s; pointer-events: none; z-index: 999;
       display: flex; align-items: center; gap: 8px;
+      font-family: 'Inter', sans-serif;
     }
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.success { background: var(--green-dim); }
     #toast.error { background: var(--red); }
-    #toast.info { background: #3B82F6; }
+    #toast.info { background: #8AAFC4; }
     .tbadge {
-      display: inline-block; padding: 3px 10px; border-radius: 5px;
-      font-size: .82rem; font-weight: 600; white-space: nowrap;
+      display: inline-block; padding: 3px 10px; border-radius: 8px;
+      font-size: .82rem; font-weight: 500; white-space: nowrap;
     }
     .tbadge.green { background: var(--green-dim); color: #fff; }
-    .tbadge.blue  { background: #3B82F6; color: #fff; }
+    .tbadge.blue  { background: #8AAFC4; color: #fff; }
   </style>
 </head>
 <body>

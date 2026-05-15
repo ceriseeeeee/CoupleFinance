@@ -5,29 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CoupleFinance — Import</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:        #F4F6F9;
+      --bg:        #F7F5F0;
       --white:     #FFFFFF;
-      --dark:      #1A1A2E;
-      --dark2:     #16213E;
-      --green:     #2ECC9A;
-      --green-dim: #1A9970;
-      --green-lt:  #E8F8F2;
-      --red:       #F87171;
-      --border:    #E8EBF0;
-      --muted:     #9CA3AF;
-      --text:      #1A1A2E;
-      --shadow:    0 2px 12px rgba(26,26,46,.07);
-      --radius:    14px;
-      --radius-sm: 10px;
+      --dark:      #1C1C1E;
+      --green:     #7C9E8A;
+      --green-dim: #5A7A66;
+      --green-lt:  #EEF3EF;
+      --red:       #E07070;
+      --border:    #EAE6DF;
+      --muted:     #A0998E;
+      --text:      #1C1C1E;
+      --shadow:    0 4px 24px rgba(28,28,30,.06);
+      --radius:    20px;
+      --radius-sm: 14px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Inter', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -38,7 +38,7 @@
     .sidebar {
       width: 230px;
       min-height: 100vh;
-      background: var(--white);
+      background: #FDFCFA;
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
@@ -47,26 +47,26 @@
       top: 0; left: 0; bottom: 0;
     }
 
-    .logo { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 600; color: var(--dark); margin-bottom: 4px; padding: 0 8px; }
+    .logo { font-family: 'DM Serif Display', serif; font-size: 1.35rem; font-weight: 400; color: var(--dark); margin-bottom: 4px; padding: 0 8px; }
     .logo span { color: var(--green); }
     .logo-sub { font-size: .72rem; color: var(--muted); padding: 0 8px; margin-bottom: 32px; }
-    .nav-section { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding: 0 8px; margin-bottom: 8px; margin-top: 16px; }
+    .nav-section { font-size: .66rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); padding: 0 8px; margin-bottom: 8px; margin-top: 16px; font-weight: 500; }
 
     .nav-item {
       display: flex; align-items: center; gap: 10px;
       padding: 10px 12px; border-radius: var(--radius-sm);
-      font-size: .88rem; font-weight: 500; color: var(--muted);
+      font-size: .88rem; font-weight: 400; color: var(--muted);
       cursor: pointer; transition: all .18s; text-decoration: none; margin-bottom: 2px;
     }
     .nav-item:hover { background: var(--bg); color: var(--text); }
-    .nav-item.active { background: var(--green-lt); color: var(--green-dim); }
+    .nav-item.active { background: var(--green-lt); color: var(--green-dim); font-weight: 500; }
     .nav-bottom { margin-top: auto; }
 
     /* ── Main ── */
     .main {
       margin-left: 230px;
       flex: 1;
-      padding: 28px 32px;
+      padding: 32px 36px;
       display: flex;
       flex-direction: column;
     }
@@ -75,16 +75,16 @@
     .hero {
       background: var(--dark);
       border-radius: var(--radius);
-      padding: 24px 32px;
+      padding: 32px 40px;
       margin-bottom: 32px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .hero h1 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 600; color: #fff; margin-bottom: 6px; }
-    .hero p { font-size: .88rem; color: #7C8DB5; }
-    .hero-illo { font-size: 3.5rem; }
+    .hero h1 { font-family: 'DM Serif Display', serif; font-size: 1.55rem; font-weight: 400; color: #fff; margin-bottom: 6px; }
+    .hero p { font-size: .85rem; color: rgba(255,255,255,.5); }
+    .hero-illo { font-size: 3.2rem; }
 
     /* ── Contenu centré ── */
     .content-wrap {
@@ -115,9 +115,9 @@
       border-radius: var(--radius-sm);
       background: transparent;
       color: var(--muted);
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: .95rem;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
       transition: all .2s;
       display: flex;
@@ -148,7 +148,7 @@
     }
 
     .drop-icon { font-size: 2.5rem; margin-bottom: 12px; }
-    .drop-zone h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; color: var(--text); margin-bottom: 6px; }
+    .drop-zone h3 { font-family: 'DM Serif Display', serif; font-size: 1.15rem; font-weight: 400; color: var(--text); margin-bottom: 6px; }
     .drop-zone p { font-size: .82rem; color: var(--muted); }
 
     /* ── Liste fichiers ── */
@@ -168,19 +168,19 @@
       width: 100%; padding: 14px;
       background: var(--dark); color: #fff;
       border: none; border-radius: var(--radius-sm);
-      font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 600;
+      font-family: 'Inter', sans-serif; font-size: .95rem; font-weight: 500;
       cursor: pointer; transition: background .2s;
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
 
     .btn-submit:hover:not(:disabled) { background: var(--green-dim); }
-    .btn-submit:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-submit:disabled { opacity: .4; cursor: not-allowed; }
 
     /* ── Erreur ── */
     .error-msg {
-      padding: 10px 14px; background: #FEE2E2;
-      border: 1px solid #FCA5A5; border-radius: 8px;
-      color: #991B1B; font-size: .82rem; margin-bottom: 12px; display: none;
+      padding: 10px 14px; background: #FDECEA;
+      border: 1px solid #E9AEAE; border-radius: 10px;
+      color: #8B3A3A; font-size: .82rem; margin-bottom: 12px; display: none;
     }
 
     /* ── Loader ── */
