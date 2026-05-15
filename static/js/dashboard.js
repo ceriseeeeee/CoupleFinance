@@ -97,6 +97,11 @@ function updateKPIs(stats) {
   const nuEl = document.getElementById('kpi-nb-unknown');
   nuEl.textContent = nbUnknown + ' inconnues';
   nuEl.className = 'kpi-sub' + (nbUnknown > 0 ? ' down' : '');
+
+  const commun = stats.total_commun || 0;
+  const perso  = stats.total_perso  || 0;
+  document.getElementById('kpi-commun').textContent = Math.round(commun) + ' €';
+  document.getElementById('kpi-perso').textContent  = Math.round(perso)  + ' €';
 }
 
 // ══════════════════════════════════════

@@ -207,6 +207,8 @@ body {
 .kpi-card.amber  { border-left-color: var(--amber); }
 .kpi-card.blue   { border-left-color: var(--blue); }
 .kpi-card.dark   { border-left-color: var(--dark); }
+.kpi-card.teal   { border-left-color: #14B8A6; }
+.kpi-card.purple { border-left-color: #A78BFA; }
 
 .kpi-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
 .kpi-val   { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 600; line-height: 1; }

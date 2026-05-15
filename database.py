@@ -340,6 +340,8 @@ def get_stats(mois: str = None, personne: str = None) -> dict:
 
     total_depenses = sum(t['montant'] for t in debits)
     total_revenus  = sum(t['montant'] for t in credits)
+    total_commun   = sum(t['montant'] for t in debits if t.get('type_depense', 'commune') == 'commune')
+    total_perso    = sum(t['montant'] for t in debits if t.get('type_depense', 'commune') == 'perso')
 
     # Par catégorie
     par_categorie = {}
@@ -395,6 +397,8 @@ def get_stats(mois: str = None, personne: str = None) -> dict:
     return {
         'total_depenses':     round(total_depenses, 2),
         'total_revenus':      round(total_revenus, 2),
+        'total_commun':       round(total_commun, 2),
+        'total_perso':        round(total_perso, 2),
         'solde':              round(total_revenus - total_depenses, 2),
         'nb_transactions':    len(transactions),
         'nb_unknown':         sum(1 for t in transactions if t['categorie'] == 'Unknown'),
