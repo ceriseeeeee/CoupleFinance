@@ -357,12 +357,43 @@ async function loadData(mois, personne) {
   if (mois)     params.set('mois', mois);
   if (personne) params.set('personne', personne);
   try {
-    const res  = await fetch('/api/dashboard-data?' + params.toString());
-    const data = await res.json();
+    const balanceParams = new URLSearchParams();
+    if (mois) balanceParams.set('mois', mois);
+    const [dashRes, balanceRes] = await Promise.all([
+      fetch('/api/dashboard-data?' + params.toString()),
+      fetch('/api/balance-couple?' + balanceParams.toString())
+    ]);
+    const data    = await dashRes.json();
+    const balance = await balanceRes.json();
     updateDashboard(data);
+    updateBalance(balance);
     syncSelects(mois, personne);
   } catch (e) {
     console.error('Erreur chargement données:', e);
+  }
+}
+
+function updateBalance(b) {
+  const el = document.getElementById('balance-total-commun');
+  if (!el) return;
+
+  el.textContent = Math.round(b.total_commun || 0) + ' €';
+  document.getElementById('balance-part-theorique').textContent = Math.round(b.part_theorique || 0) + ' €';
+
+  const pp    = b.par_personne || {};
+  const ppEl  = document.getElementById('balance-par-personne');
+  ppEl.innerHTML = Object.entries(pp).map(([nom, montant]) =>
+    `<div class="balance-person"><span>${esc(nom)}</span><span class="balance-amt">${Math.round(montant)} €</span></div>`
+  ).join('');
+
+  const soldeEl = document.getElementById('balance-solde');
+  const s = b.solde;
+  if (!s || s.montant === 0) {
+    soldeEl.textContent = '✓ Équilibre parfait';
+    soldeEl.className = 'balance-solde ok';
+  } else {
+    soldeEl.textContent = `${s.debiteur} doit ${Math.round(s.montant)} € à ${s.crediteur}`;
+    soldeEl.className = 'balance-solde warn';
   }
 }
 

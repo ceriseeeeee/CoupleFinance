@@ -19,6 +19,7 @@ from categorizer import save_user_correction, ALL_CATEGORIES
 from upload_service import process_upload
 from database import (init_db, insert_transactions, update_categorie,
                       get_stats, get_mois_disponibles, get_transactions,
+                      get_balance_couple,
                       save_session, get_session, update_session, delete_session)
 
 app = Flask(__name__)
@@ -168,6 +169,12 @@ def api_dashboard_data():
     transactions = get_transactions(mois=mois, personne=personne)
     stats = get_stats(mois=mois, personne=personne)
     return jsonify({"transactions": transactions, "stats": stats})
+
+
+@app.route("/api/balance-couple")
+def api_balance_couple():
+    mois = request.args.get("mois") or None
+    return jsonify(get_balance_couple(mois=mois))
 
 
 @app.route("/api/stats")

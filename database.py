@@ -411,3 +411,59 @@ def get_stats(mois: str = None, personne: str = None) -> dict:
         'evolution_mensuelle': evolution,
         'top_depenses':       top_depenses,
     }
+
+
+def get_balance_couple(mois: str = None) -> dict:
+    """Calcule la balance des dépenses communes entre les deux personnes."""
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        p = '%s' if is_postgres() else '?'
+        query = """
+            SELECT personne, SUM(montant) as total
+            FROM transactions
+            WHERE type = 'debit' AND type_depense = 'commune'
+        """
+        params = []
+        if mois:
+            query += f" AND mois = {p}"
+            params.append(mois)
+        query += " GROUP BY personne"
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        if is_postgres():
+            par_personne_raw = {r[0]: r[1] for r in rows}
+        else:
+            par_personne_raw = {r['personne']: r['total'] for r in rows}
+    finally:
+        conn.close()
+
+    par_personne = {k: round(float(v), 2) for k, v in par_personne_raw.items()}
+    total_commun = round(sum(par_personne.values()), 2)
+
+    if not par_personne:
+        return {"total_commun": 0, "par_personne": {}, "part_theorique": 0, "solde": None}
+
+    part_theorique = round(total_commun / 2, 2)
+
+    solde = None
+    personnes = list(par_personne.keys())
+    if len(personnes) == 2:
+        p1, p2 = personnes[0], personnes[1]
+        diff = round(par_personne[p1] - part_theorique, 2)
+        if diff > 0:
+            solde = {"montant": round(abs(diff), 2), "debiteur": p2, "crediteur": p1}
+        elif diff < 0:
+            solde = {"montant": round(abs(diff), 2), "debiteur": p1, "crediteur": p2}
+        else:
+            solde = {"montant": 0, "debiteur": None, "crediteur": None}
+    elif len(personnes) == 1:
+        solde = {"montant": round(abs(par_personne[personnes[0]] - part_theorique), 2),
+                 "debiteur": None, "crediteur": personnes[0]}
+
+    return {
+        "total_commun":    total_commun,
+        "par_personne":    par_personne,
+        "part_theorique":  part_theorique,
+        "solde":           solde,
+    }

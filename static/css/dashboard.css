@@ -342,6 +342,19 @@ body {
 }
 .type-select:focus { border-color: var(--green); background: var(--white); }
 
+/* ── Balance Couple ── */
+.balance-grid   { display: flex; gap: 24px; margin: 14px 0 10px; }
+.balance-item   { flex: 1; }
+.balance-label  { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+.balance-val    { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 600; }
+.balance-persons { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.balance-person { display: flex; justify-content: space-between; align-items: center; gap: 16px;
+                  padding: 8px 14px; background: var(--bg); border-radius: var(--radius-sm); font-size: .88rem; flex: 1; }
+.balance-amt    { font-weight: 700; font-family: 'Syne', sans-serif; }
+.balance-solde  { padding: 10px 16px; border-radius: var(--radius-sm); font-weight: 600; font-size: .95rem; text-align: center; }
+.balance-solde.ok   { background: var(--green-lt); color: var(--green-dim); }
+.balance-solde.warn { background: #FEF3C7; color: #B45309; }
+
 #dash-toast {
   position: fixed; bottom: 2rem; right: 2rem;
   background: var(--dark); color: #fff;
