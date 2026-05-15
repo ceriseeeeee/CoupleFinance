@@ -739,22 +739,51 @@ function openRepartitionModal() {
     showDashToast('Créez d\'abord un objectif', '');
     return;
   }
-  const mois = document.getElementById('mois-select-sav').value || document.getElementById('mois-select').value || '';
-  const infoEl = document.getElementById('repartition-mois-info');
-  if (infoEl) infoEl.textContent = mois ? `Mois sélectionné : ${mois}` : 'Tous les mois';
 
+  // Épargne détectée depuis les stats courantes
+  const detected = (currentStats.par_categorie || {})['Épargne'] || 0;
+  document.getElementById('rep-detected-val').textContent = Math.round(detected) + ' €';
+  document.getElementById('rep-manual-input').value = '';
+
+  // Lignes par objectif
   document.getElementById('repartition-rows').innerHTML = _objectifs.map(o => `
     <div class="budget-editor-row">
       <label class="budget-editor-label">${esc(o.emoji || '🎯')} ${esc(o.nom)}</label>
       <div class="budget-editor-field">
-        <input class="budget-editor-input" type="number" min="0" step="1" value="0"
-               data-obj-id="${esc(o.id)}" placeholder="0">
+        <input class="budget-editor-input rep-obj-input" type="number" min="0" step="1"
+               value="0" data-obj-id="${esc(o.id)}" placeholder="0" oninput="updateRepStats()">
         <span class="budget-editor-unit">€</span>
       </div>
     </div>
   `).join('');
 
+  updateRepStats();
   document.getElementById('repartition-modal').style.display = 'flex';
+}
+
+function updateRepStats() {
+  const detected  = parseFloat(document.getElementById('rep-detected-val').textContent) || 0;
+  const manual    = parseFloat(document.getElementById('rep-manual-input').value) || 0;
+  const disponible = detected + manual;
+
+  const totalSaisi = Array.from(document.querySelectorAll('.rep-obj-input'))
+    .reduce((s, inp) => s + (parseFloat(inp.value) || 0), 0);
+
+  const restant = disponible - totalSaisi;
+  const pct     = disponible > 0 ? Math.min((totalSaisi / disponible) * 100, 100) : 0;
+  const over    = totalSaisi > disponible;
+
+  document.getElementById('rep-disponible').textContent = Math.round(disponible) + ' €';
+
+  const restantEl = document.getElementById('rep-restant');
+  restantEl.textContent = (restant >= 0 ? '' : '-') + Math.abs(Math.round(restant)) + ' €';
+  restantEl.className = 'rep-restant-val' + (over ? ' over' : '');
+
+  const barEl = document.getElementById('rep-bar-fill');
+  barEl.style.width      = pct + '%';
+  barEl.style.background = over ? 'var(--red)' : (pct > 80 ? 'var(--amber)' : 'var(--green)');
+
+  document.getElementById('rep-warning').style.display = over ? 'block' : 'none';
 }
 
 function closeRepartitionModal(event) {

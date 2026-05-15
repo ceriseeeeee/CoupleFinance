@@ -410,14 +410,44 @@
 </div>
 
 <div id="repartition-modal" class="modal-overlay" onclick="closeRepartitionModal(event)">
-  <div class="modal-card">
+  <div class="modal-card" style="width:520px">
     <div class="modal-header">
       <h2 class="modal-title">Répartir l'épargne du mois</h2>
       <button class="modal-close" onclick="document.getElementById('repartition-modal').style.display='none'">✕</button>
     </div>
-    <div class="modal-body" style="gap:12px">
-      <div style="font-size:.82rem;color:var(--muted);margin-bottom:4px">Indiquez combien vous affectez à chaque objectif ce mois :</div>
-      <div id="repartition-mois-info" style="font-size:.8rem;color:var(--green-dim);font-weight:500;margin-bottom:8px"></div>
+    <div class="modal-body" style="gap:0">
+
+      <!-- Épargne détectée + montant manuel -->
+      <div class="rep-sources">
+        <div class="rep-detected">
+          <span class="rep-src-label">Épargne détectée automatiquement</span>
+          <span class="rep-src-val" id="rep-detected-val">0 €</span>
+        </div>
+        <div class="rep-manual">
+          <span class="rep-src-label">Ajouter un montant manuel</span>
+          <div class="rep-manual-field">
+            <input id="rep-manual-input" class="budget-editor-input" type="number" min="0" step="1"
+                   placeholder="0" oninput="updateRepStats()" style="width:90px">
+            <span class="budget-editor-unit">€</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barre disponible / restant -->
+      <div class="rep-budget-zone">
+        <div class="rep-budget-summary">
+          <span>Disponible : <strong id="rep-disponible">0 €</strong></span>
+          <span>Restant : <strong id="rep-restant" class="rep-restant-val">0 €</strong></span>
+        </div>
+        <div class="rep-bar-track">
+          <div class="rep-bar-fill" id="rep-bar-fill" style="width:0%"></div>
+        </div>
+        <div id="rep-warning" class="rep-warning" style="display:none">⚠ Total saisi dépasse le disponible</div>
+      </div>
+
+      <!-- Séparateur -->
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;padding:14px 0 10px">Affecter par objectif</div>
+
       <div id="repartition-rows"></div>
     </div>
     <div class="modal-footer">
