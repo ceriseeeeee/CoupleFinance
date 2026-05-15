@@ -332,6 +332,14 @@ body {
 }
 .cat-select-inline:focus { border-color: var(--green); background: var(--white); }
 
+.type-select {
+  padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--text);
+  font-family: 'Nunito', sans-serif; font-size: .78rem; cursor: pointer;
+  min-width: 120px; outline: none; transition: border-color .2s;
+}
+.type-select:focus { border-color: var(--green); background: var(--white); }
+
 #dash-toast {
   position: fixed; bottom: 2rem; right: 2rem;
   background: var(--dark); color: #fff;

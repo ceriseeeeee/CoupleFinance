@@ -235,6 +235,12 @@ function updateTxnTable(transactions) {
       <td style="color:var(--muted)">${esc(t.date)}</td>
       <td style="font-weight:500">${libelle}</td>
       <td>${buildCatSelect(t.id, t.categorie)}</td>
+      <td>
+        <select class="type-select" onchange="correctType('${esc(t.id)}', this.value, this)" data-cat="${esc(t.categorie)}">
+          <option value="commune" ${t.type_depense === 'commune' ? 'selected' : ''}>🤝 Commune</option>
+          <option value="perso" ${t.type_depense !== 'commune' ? 'selected' : ''}>👤 Perso</option>
+        </select>
+      </td>
       <td>${esc(t.personne)}</td>
       <td style="color:var(--muted);font-size:.78rem">${esc(t.banque)}</td>
       <td class="${cls}" style="text-align:right">${sign}${montantStr} €</td>
@@ -436,6 +442,20 @@ async function correctDashboard(transactionId, newCategory, selectEl) {
   } finally {
     selectEl.disabled = false;
   }
+}
+
+async function correctType(id, type, selectEl) {
+  const cat = selectEl.dataset.cat;
+  try {
+    const res = await fetch('/api/correct', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transaction_id: id, categorie: cat, type_depense: type })
+    });
+    const data = await res.json();
+    if (data.success) showDashToast('✓ Type mis à jour', 'ok');
+    else showDashToast('Erreur', '');
+  } catch(e) { showDashToast('Erreur réseau', ''); }
 }
 
 function showDashToast(msg, type) {
