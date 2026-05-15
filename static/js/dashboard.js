@@ -34,12 +34,12 @@ function filterTxn(type, btn) {
 // ══════════════════════════════════════
 //  CHART.JS CONFIG
 // ══════════════════════════════════════
-Chart.defaults.font.family = 'Nunito';
+Chart.defaults.font.family = 'Inter';
 Chart.defaults.font.size = 12;
-Chart.defaults.color = '#9CA3AF';
-Chart.defaults.borderColor = '#E8EBF0';
+Chart.defaults.color = '#A0998E';
+Chart.defaults.borderColor = '#EAE6DF';
 
-const PALETTE = ['#2ECC9A','#60A5FA','#F87171','#F59E0B','#A78BFA','#34D399','#FB923C','#F472B6','#38BDF8'];
+const PALETTE = ['#7C9E8A','#8AAFC4','#E07070','#C9A96E','#B4A0D4','#7DBFB2','#D4956A','#D4A0B4','#6AB4C4'];
 
 // ══════════════════════════════════════
 //  CONSTANTES
@@ -281,12 +281,12 @@ function updateTopDepenses(tops) {
 // ══════════════════════════════════════
 function updateBudgetRows(parCat) {
   document.querySelectorAll('.budget-data-row').forEach(row => {
-    const cat    = row.dataset.cat;
-    const prevu  = parseInt(row.dataset.prevu) || 0;
+    const cat     = row.dataset.cat;
+    const prevu   = parseInt(row.dataset.prevu) || 0;
     const realise = parCat[cat] || 0;
-    const pct    = prevu > 0 ? Math.round((realise / prevu) * 100) : 0;
-    const color  = pct > 90 ? '#F87171' : (pct > 70 ? '#F59E0B' : '#2ECC9A');
-    const pctCls = pct > 90 ? 'over'   : (pct > 70 ? 'warn'    : 'ok');
+    const pct     = prevu > 0 ? Math.round((realise / prevu) * 100) : 0;
+    const color   = pct > 90 ? '#E07070' : (pct > 70 ? '#C9A96E' : '#7C9E8A');
+    const pctCls  = pct > 90 ? 'over'    : (pct > 70 ? 'warn'    : 'ok');
 
     const fill = row.querySelector('.bud-bar-fill');
     fill.style.width      = Math.min(pct, 100) + '%';
@@ -297,7 +297,42 @@ function updateBudgetRows(parCat) {
     const pctEl = row.querySelector('.bud-pct');
     pctEl.textContent = pct + '%';
     pctEl.className   = `bud-pct ${pctCls}`;
+
+    const reste   = prevu - realise;
+    const resteEl = row.querySelector('.bud-reste');
+    if (resteEl) {
+      resteEl.textContent = (reste >= 0 ? '+' : '') + Math.round(reste) + ' €';
+      resteEl.style.color = reste >= 0 ? 'var(--green-dim)' : 'var(--red)';
+    }
   });
+}
+
+// ══════════════════════════════════════
+//  UPDATE BUDGET KPIs
+// ══════════════════════════════════════
+function updateBudgetKPIs(stats) {
+  const totalPrevu  = Object.values(BUDGETS_PREVUS).reduce((a, b) => a + b, 0);
+  const totalRealise = stats.total_depenses || 0;
+  const pct         = totalPrevu > 0 ? Math.round((totalRealise / totalPrevu) * 100) : 0;
+  const eco         = totalPrevu - totalRealise;
+
+  const elPrevu = document.getElementById('bud-kpi-prevu');
+  if (elPrevu) elPrevu.textContent = totalPrevu + ' €';
+
+  const elRealise = document.getElementById('bud-kpi-realise');
+  if (elRealise) elRealise.textContent = Math.round(totalRealise) + ' €';
+
+  const elPct = document.getElementById('bud-kpi-pct');
+  if (elPct) {
+    elPct.textContent = pct + '%';
+    elPct.style.color = pct > 90 ? 'var(--red)' : (pct > 70 ? 'var(--amber)' : 'var(--green)');
+  }
+
+  const elEco = document.getElementById('bud-kpi-eco');
+  if (elEco) {
+    elEco.textContent = (eco >= 0 ? '+' : '') + Math.round(eco) + ' €';
+    elEco.style.color = eco >= 0 ? '#7DBFB2' : 'var(--red)';
+  }
 }
 
 // ══════════════════════════════════════
@@ -332,6 +367,7 @@ function updateDashboard(data) {
   updateTxnTable(transactions);
   updateTopDepenses(stats.top_depenses || []);
   updateBudgetRows(stats.par_categorie || {});
+  updateBudgetKPIs(stats);
   updateSavings(stats);
 }
 
@@ -425,6 +461,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 function toggleBudgetPerson(p, btn) {
   document.querySelectorAll('.person-btn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
+  const mois     = document.getElementById('mois-select-bud').value;
+  const personne = p === 'all' ? '' : (p === 'cerise' ? 'Cerise' : 'Loïc');
+  loadData(mois, personne);
 }
 
 // ══════════════════════════════════════
