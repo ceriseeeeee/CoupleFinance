@@ -25,6 +25,8 @@ function filterTxn(type, btn) {
     if (type === 'credit')  show = row.dataset.type === 'credit';
     if (type === 'cerise')  show = normalizeName(row.dataset.personne) === 'cerise';
     if (type === 'loic')    show = normalizeName(row.dataset.personne) === 'loic';
+    if (type === 'commune') show = row.dataset.typeDepense === 'commune';
+    if (type === 'perso')   show = row.dataset.typeDepense === 'perso';
     row.style.display = show ? '' : 'none';
   });
 }
@@ -231,7 +233,8 @@ function updateTxnTable(transactions) {
               data-cat="${esc(t.categorie)}"
               data-personne="${esc((t.personne || '').toLowerCase())}"
               data-id="${esc(t.id)}"
-              data-libelle="${esc(t.libelle_clean || t.libelle)}">
+              data-libelle="${esc(t.libelle_clean || t.libelle)}"
+              data-type-depense="${esc(t.type_depense || 'commune')}">
       <td style="color:var(--muted)">${esc(t.date)}</td>
       <td style="font-weight:500">${libelle}</td>
       <td>${buildCatSelect(t.id, t.categorie)}</td>
