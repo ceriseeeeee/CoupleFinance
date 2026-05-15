@@ -218,6 +218,7 @@
             <option value="Loïc" {{ 'selected' if personne_filtre == "Loïc" }}>Loïc</option>
           </select>
         </div>
+        <button class="btn-edit-budget" onclick="openBudgetEditor()">✏️ Modifier les budgets</button>
         <div class="hero-illo">🌱</div>
       </div>
     </div>
@@ -276,7 +277,7 @@
           <div class="bud-bar-track">
             <div class="bud-bar-fill" style="width:0%;background:#7C9E8A;"></div>
           </div>
-          <span style="text-align:right;color:var(--muted);font-size:.8rem">{{ prevu }} €</span>
+          <span class="bud-prevu-display" style="text-align:right;color:var(--muted);font-size:.8rem">{{ prevu }} €</span>
           <span class="bud-realise" style="text-align:right;font-size:.8rem">0 €</span>
           <span class="bud-pct ok">0%</span>
           <span class="bud-reste" style="text-align:right;font-size:.8rem">—</span>
@@ -369,6 +370,20 @@
   </div>
 
 </main>
+
+<div id="budget-modal" class="modal-overlay" onclick="closeBudgetModal(event)">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 class="modal-title">Modifier les budgets</h2>
+      <button class="modal-close" onclick="document.getElementById('budget-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body" id="budget-editor-rows"></div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="document.getElementById('budget-modal').style.display='none'">Annuler</button>
+      <button class="modal-btn-save" onclick="saveBudgets()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
 
 <div id="dash-toast"></div>
 

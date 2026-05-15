@@ -117,6 +117,23 @@ def init_db():
 
         cur.execute("CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at)")
 
+        if is_postgres():
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS budgets (
+                    categorie TEXT PRIMARY KEY,
+                    montant REAL NOT NULL,
+                    updated_at TIMESTAMP DEFAULT NOW()
+                )
+            """)
+        else:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS budgets (
+                    categorie TEXT PRIMARY KEY,
+                    montant REAL NOT NULL,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
         # Migration : ajout de type_depense sur les tables existantes
         if is_postgres():
             cur.execute("""
@@ -411,6 +428,58 @@ def get_stats(mois: str = None, personne: str = None) -> dict:
         'evolution_mensuelle': evolution,
         'top_depenses':       top_depenses,
     }
+
+
+DEFAULT_BUDGETS = {
+    'Loyer': 1075, 'Appartement': 70, 'Abonnements': 181,
+    'Électricité': 100, 'Transport': 50, 'Shopping': 200,
+    'Courses & Alimentation': 300, 'Eating out': 245,
+    'Santé': 25, 'Divertissements & Loisirs': 50,
+    'Épargne': 400, 'Bénin Voyage': 200, 'Voyage Couple': 200,
+}
+
+
+def get_budgets() -> dict:
+    """Retourne les budgets personnalisés, ou les défauts si la table est vide."""
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT categorie, montant FROM budgets")
+        rows = cur.fetchall()
+        if is_postgres():
+            result = {r[0]: r[1] for r in rows}
+        else:
+            result = {r['categorie']: r['montant'] for r in rows}
+    finally:
+        conn.close()
+
+    if not result:
+        return dict(DEFAULT_BUDGETS)
+    for cat, montant in DEFAULT_BUDGETS.items():
+        if cat not in result:
+            result[cat] = montant
+    return result
+
+
+def save_budget(categorie: str, montant: float):
+    """Upsert d'un budget pour une catégorie."""
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        if is_postgres():
+            cur.execute("""
+                INSERT INTO budgets (categorie, montant)
+                VALUES (%s, %s)
+                ON CONFLICT (categorie) DO UPDATE SET montant = EXCLUDED.montant, updated_at = NOW()
+            """, (categorie, montant))
+        else:
+            cur.execute("""
+                INSERT OR REPLACE INTO budgets (categorie, montant, updated_at)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+            """, (categorie, montant))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def get_balance_couple(mois: str = None) -> dict:

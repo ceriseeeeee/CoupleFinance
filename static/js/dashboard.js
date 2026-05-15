@@ -51,13 +51,16 @@ const ALL_CATS = [
   'Voyage Couple','Revenus','Virements','Unknown'
 ];
 
-const BUDGETS_PREVUS = {
+let BUDGETS_PREVUS = {
   'Loyer': 1075, 'Appartement': 70, 'Abonnements': 181,
   'Électricité': 100, 'Transport': 50, 'Shopping': 200,
   'Courses & Alimentation': 300, 'Eating out': 245,
   'Santé': 25, 'Divertissements & Loisirs': 50,
   'Épargne': 400, 'Bénin Voyage': 200, 'Voyage Couple': 200
 };
+
+let currentStats  = {};
+let currentParCat = {};
 
 // ══════════════════════════════════════
 //  INSTANCES CHART (pour destroy/recreate)
@@ -361,12 +364,14 @@ function updateSavings(stats) {
 function updateDashboard(data) {
   const stats        = data.stats || {};
   const transactions = data.transactions || [];
+  currentStats  = stats;
+  currentParCat = stats.par_categorie || {};
 
   updateKPIs(stats);
   updateCharts(stats);
   updateTxnTable(transactions);
   updateTopDepenses(stats.top_depenses || []);
-  updateBudgetRows(stats.par_categorie || {});
+  updateBudgetRows(currentParCat);
   updateBudgetKPIs(stats);
   updateSavings(stats);
 }
@@ -455,8 +460,78 @@ async function applyFilters() {
 document.addEventListener('DOMContentLoaded', async () => {
   const mois     = document.getElementById('mois-select').value;
   const personne = document.getElementById('personne-select').value;
+  await loadBudgets();
   await loadData(mois, personne);
 });
+
+// ══════════════════════════════════════
+//  BUDGETS PERSONNALISABLES
+// ══════════════════════════════════════
+async function loadBudgets() {
+  try {
+    const res     = await fetch('/api/budgets');
+    const budgets = await res.json();
+    Object.assign(BUDGETS_PREVUS, budgets);
+    document.querySelectorAll('.budget-data-row').forEach(row => {
+      const cat = row.dataset.cat;
+      if (budgets[cat] !== undefined) {
+        row.dataset.prevu = budgets[cat];
+        const el = row.querySelector('.bud-prevu-display');
+        if (el) el.textContent = budgets[cat] + ' €';
+      }
+    });
+    if (Object.keys(currentParCat).length > 0) {
+      updateBudgetRows(currentParCat);
+      updateBudgetKPIs(currentStats);
+    }
+  } catch(e) {
+    console.error('Erreur chargement budgets:', e);
+  }
+}
+
+async function openBudgetEditor() {
+  try {
+    const res     = await fetch('/api/budgets');
+    const budgets = await res.json();
+    document.getElementById('budget-editor-rows').innerHTML = Object.entries(budgets).map(([cat, montant]) => `
+      <div class="budget-editor-row">
+        <label class="budget-editor-label">${esc(cat)}</label>
+        <div class="budget-editor-field">
+          <input class="budget-editor-input" type="number" min="0" step="1"
+                 data-cat="${esc(cat)}" value="${Math.round(montant)}">
+          <span class="budget-editor-unit">€</span>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('budget-modal').style.display = 'flex';
+  } catch(e) {
+    showDashToast('Erreur chargement budgets', '');
+  }
+}
+
+function closeBudgetModal(event) {
+  if (event.target === document.getElementById('budget-modal')) {
+    document.getElementById('budget-modal').style.display = 'none';
+  }
+}
+
+async function saveBudgets() {
+  const inputs = Array.from(document.querySelectorAll('.budget-editor-input'));
+  try {
+    await Promise.all(inputs.map(inp =>
+      fetch('/api/budgets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categorie: inp.dataset.cat, montant: parseFloat(inp.value) || 0 })
+      })
+    ));
+    document.getElementById('budget-modal').style.display = 'none';
+    await loadBudgets();
+    showDashToast('✓ Budgets sauvegardés', 'ok');
+  } catch(e) {
+    showDashToast('Erreur sauvegarde', '');
+  }
+}
 
 function toggleBudgetPerson(p, btn) {
   document.querySelectorAll('.person-btn').forEach(b => b.classList.remove('on'));

@@ -19,7 +19,7 @@ from categorizer import save_user_correction, ALL_CATEGORIES
 from upload_service import process_upload
 from database import (init_db, insert_transactions, update_categorie,
                       get_stats, get_mois_disponibles, get_transactions,
-                      get_balance_couple,
+                      get_balance_couple, get_budgets, save_budget,
                       save_session, get_session, update_session, delete_session)
 
 app = Flask(__name__)
@@ -169,6 +169,22 @@ def api_dashboard_data():
     transactions = get_transactions(mois=mois, personne=personne)
     stats = get_stats(mois=mois, personne=personne)
     return jsonify({"transactions": transactions, "stats": stats})
+
+
+@app.route("/api/budgets", methods=["GET"])
+def api_get_budgets():
+    return jsonify(get_budgets())
+
+
+@app.route("/api/budgets", methods=["POST"])
+def api_save_budget():
+    data = request.json
+    categorie = data.get("categorie")
+    montant   = data.get("montant")
+    if not categorie or montant is None:
+        return jsonify({"error": "categorie et montant requis"}), 400
+    save_budget(categorie, float(montant))
+    return jsonify({"success": True})
 
 
 @app.route("/api/balance-couple")
