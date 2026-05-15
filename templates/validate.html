@@ -132,6 +132,15 @@
     }
     .cat-select:focus { border-color: var(--green); }
 
+    /* ── Select type dépense ── */
+    .type-select {
+      padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--white); color: var(--text);
+      font-family: 'Nunito', sans-serif; font-size: .8rem; cursor: pointer;
+      min-width: 120px; outline: none; transition: border-color .2s;
+    }
+    .type-select:focus { border-color: var(--green); }
+
     /* ── Icône corrigé ── */
     .corrected { color: var(--green); margin-left: 4px; font-size: .8rem; }
 
@@ -218,6 +227,7 @@
             <th>Type</th>
             <th>Personne</th>
             <th>Catégorie</th>
+            <th>Type</th>
           </tr>
         </thead>
         <tbody>
@@ -245,6 +255,12 @@
                 {% endfor %}
               </select>
               {% if t.corrige_manuellement %}<span class="corrected">✓</span>{% endif %}
+            </td>
+            <td>
+              <select class="type-select" onchange="correctType('{{ t.id }}', this.value, this)">
+                <option value="commune" {{ 'selected' if t.get('type_depense', 'commune') == 'commune' }}>🤝 Commune</option>
+                <option value="perso" {{ 'selected' if t.get('type_depense', 'commune') == 'perso' }}>👤 Perso</option>
+              </select>
             </td>
           </tr>
           {% endfor %}
@@ -343,6 +359,17 @@
       t.textContent = msg;
       t.className = `show ${type}`;
       setTimeout(() => t.className = '', 2500);
+    }
+
+    async function correctType(id, type, selectEl) {
+      try {
+        await fetch('/api/correct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: SESSION_ID, transaction_id: id, categorie: selectEl.closest('tr').querySelector('.cat-select').value, type_depense: type })
+        });
+        showToast('✓ Type mis à jour', 'success');
+      } catch(e) { showToast('Erreur', 'error'); }
     }
 
     function showToastHTML(html, type = '') {
