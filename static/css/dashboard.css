@@ -347,15 +347,50 @@ body {
 .type-select:focus { border-color: var(--green); background: var(--white); }
 
 /* ── Balance Couple ── */
-.balance-grid   { display: flex; gap: 24px; margin: 16px 0 12px; }
-.balance-item   { flex: 1; }
+#balance-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+}
+
+.balance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0 16px;
+}
+
+.balance-item   { }
 .balance-label  { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px; font-weight: 500; }
 .balance-val    { font-family: 'DM Serif Display', serif; font-size: 1.7rem; font-weight: 400; }
-.balance-persons { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-.balance-person { display: flex; justify-content: space-between; align-items: center; gap: 16px;
-                  padding: 10px 16px; background: var(--bg); border-radius: var(--radius-sm); font-size: .88rem; flex: 1; }
+
+.balance-persons { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+
+.balance-person {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  font-size: .88rem;
+  font-family: 'Inter', sans-serif;
+  flex: 1;
+}
+
 .balance-amt    { font-weight: 600; font-family: 'DM Serif Display', serif; font-size: 1.1rem; }
-.balance-solde  { padding: 12px 18px; border-radius: var(--radius-sm); font-weight: 500; font-size: .92rem; text-align: center; }
+
+.balance-solde  {
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: .92rem;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+}
 .balance-solde.ok   { background: var(--green-lt); color: var(--green-dim); }
 .balance-solde.warn { background: #FAF0DC; color: #8A6830; }
 
