@@ -194,7 +194,7 @@ body {
 ══════════════════════════════════════ */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(7, 1fr);
   gap: 16px;
   margin-bottom: 28px;
 }
@@ -202,7 +202,7 @@ body {
 .kpi-card {
   background: var(--white);
   border-radius: var(--radius);
-  padding: 24px 28px;
+  padding: 16px 18px;
   box-shadow: var(--shadow);
   border-top: 3px solid transparent;
   border-left: none;
@@ -218,8 +218,8 @@ body {
 .kpi-card.teal   { border-top-color: #7DBFB2; }
 .kpi-card.purple { border-top-color: #B4A0D4; }
 
-.kpi-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; font-weight: 500; }
-.kpi-val   { font-family: 'DM Serif Display', serif; font-size: 1.7rem; font-weight: 400; line-height: 1; }
+.kpi-label { font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; font-weight: 500; }
+.kpi-val   { font-family: 'DM Serif Display', serif; font-size: 1.3rem; font-weight: 400; line-height: 1; }
 .kpi-sub   { font-size: .72rem; margin-top: 6px; color: var(--muted); }
 .kpi-sub.up   { color: var(--green); }
 .kpi-sub.down { color: var(--red); }
